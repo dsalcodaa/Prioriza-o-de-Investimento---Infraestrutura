@@ -1,0 +1,266 @@
+﻿posicao;id;tipo;nome;municipio;km;C2_vulnerabilidade;C1_desenvolvimento;C3_dificuldade;indice
+1;ramal-belem-rio-preto-da-eva;Ramal / estrada vicinal;Ramal Belém;Rio Preto da Eva;13.38;5;1.0;4;0.7442
+2;ramal-do-bena-maues;Ramal / estrada vicinal;Ramal do Bena;Maués;8.4;4;3.0;2;0.685
+3;ramal-do-km-120-presidente-figueiredo;Ramal / estrada vicinal;Ramal do Km 120;Presidente Figueiredo;7.88;4;4.0;4;0.6836
+4;ramal-jequitiba-labrea;Ramal / estrada vicinal;Ramal Jequitibá;Lábrea;60.03;4;5.0;6;0.6822
+5;ramal-do-anveres-careiro;Ramal / estrada vicinal;Ramal do Anveres;Careiro;3.19;4;2.0;1;0.6742
+6;ramal-do-9-careiro;Ramal / estrada vicinal;Ramal do 9;Careiro;4.64;4;2.0;1;0.6742
+7;ramal-igarape-do-passarinho-km-8-careiro;Ramal / estrada vicinal;Ramal Igarapé do Passarinho Km 8;Careiro;6.0;4;2.0;1;0.6742
+8;ramal-do-muiracupuzinho-itacoatiara;Ramal / estrada vicinal;Ramal do Muiracupuzinho;Itacoatiara;10.52;4;2.0;1;0.6742
+9;vicinal-progresso-manicore;Ramal / estrada vicinal;Vicinal Progresso;Manicoré;7.01;4;2.5;2;0.6735
+10;ramal-terra-preta-autazes;Ramal / estrada vicinal;Ramal Terra Preta;Autazes;2.01;4;2.5;2;0.6735
+11;ramal-ribamar-manaus;Ramal / estrada vicinal;Ramal Ribamar;Manaus;1.48;4;1.0;1;0.6512
+12;ramal-do-km-52-labrea;Ramal / estrada vicinal;Ramal do km 52;Lábrea;31.16;4;4.0;7;0.647
+13;vicinal-do-cicao-manicore;Ramal / estrada vicinal;Vicinal do Cição;Manicoré;6.86;4;1.0;2;0.639
+14;ramal-sargento-picanco-presidente-figueiredo;Ramal / estrada vicinal;Ramal Sargento Picanço;Presidente Figueiredo;2.32;4;2.0;4;0.6376
+15;ramal-do-caramuru-presidente-figueiredo;Ramal / estrada vicinal;Ramal do Caramuru;Presidente Figueiredo;2.26;4;2.0;4;0.6376
+16;ramal-do-procopio-rio-preto-da-eva;Ramal / estrada vicinal;Ramal do Procópio;Rio Preto da Eva;18.6;4;2.5;5;0.6369
+17;ramal-rio-preto-da-eva;Ramal / estrada vicinal;Ramal;Rio Preto da Eva;18.69;4;2.5;5;0.6369
+18;ramal-do-itauba-manaus;Ramal / estrada vicinal;Ramal do Itaúba;Manaus;5.65;4;3.0;6;0.6362
+19;estrada-do-calistra-ipixuna;Ramal / estrada vicinal;Estrada do Calistra;Ipixuna;5.09;4;1.0;3;0.6268
+20;ramal-da-cachoeira-labrea;Ramal / estrada vicinal;Ramal da Cachoeira;Lábrea;15.35;4;2.5;6;0.6247
+21;ramal-do-urubui-presidente-figueiredo;Ramal / estrada vicinal;Ramal do Urubuí;Presidente Figueiredo;9.79;3;7.5;5;0.6223
+22;ramal-dos-baianos-manicore;Ramal / estrada vicinal;Ramal dos Baianos;Manicoré;28.38;4;1.5;5;0.6139
+23;ramal-santo-antonio-labrea;Ramal / estrada vicinal;Ramal Santo Antônio;Lábrea;24.58;4;2.0;6;0.6132
+24;ramal-pique-do-meio-boca-do-acre;Ramal / estrada vicinal;Ramal Pique do Meio;Boca do Acre;26.14;4;2.0;6;0.6132
+25;ramal-castanhal-labrea;Ramal / estrada vicinal;Ramal Castanhal;Lábrea;32.52;4;2.0;6;0.6132
+26;vicinal-brasilia-apui;Ramal / estrada vicinal;Vicinal Brasília;Apuí;8.15;4;1.5;6;0.6017
+27;estrada-do-paraiso-japura;Ramal / estrada vicinal;Estrada do Paraíso;Japurá;1.31;3;5.0;2;0.6014
+28;ramal-do-mutuca-autazes;Ramal / estrada vicinal;Ramal do Mutuca;Autazes;3.49;3;4.0;1;0.5906
+29;ramal-lopes-filho-presidente-figueiredo;Ramal / estrada vicinal;Ramal Lopes Filho;Presidente Figueiredo;12.1;4;1.0;6;0.5902
+30;estrada-do-aeroporto-barreirinha;Ramal / estrada vicinal;Estrada do Aeroporto;Barreirinha;1.01;3;4.5;2;0.5899
+31;ramal-do-boi-labrea;Ramal / estrada vicinal;Ramal do Boi;Lábrea;54.46;3;5.0;3;0.5892
+32;ramal-mendes-junior-labrea;Ramal / estrada vicinal;Ramal Mendes Junior;Lábrea;38.15;3;5.0;3;0.5892
+33;estrada-do-icapo-jutai;Ramal / estrada vicinal;Estrada do Icapó;Jutaí;2.78;3;6.0;5;0.5878
+34;estrada-de-acesso-a-praia-do-acutuba-iranduba;Ramal / estrada vicinal;Estrada de Acesso a Praia do Açutuba;Iranduba;11.02;3;6.5;6;0.5871
+35;ramal-do-14-careiro;Ramal / estrada vicinal;Ramal do 14;Careiro;16.52;3;3.5;1;0.5791
+36;estrada-do-itapa-canutama;Ramal / estrada vicinal;Estrada do Itapá;Canutama;4.26;3;3.5;1;0.5791
+37;ramal-rumo-certo-presidente-figueiredo;Ramal / estrada vicinal;Ramal Rumo Certo;Presidente Figueiredo;6.63;3;4.0;2;0.5784
+38;estrada-do-engenho-itacoatiara;Ramal / estrada vicinal;Estrada do Engenho;Itacoatiara;15.85;3;4.5;3;0.5777
+39;ramal-dos-carobas-guajara;Ramal / estrada vicinal;Ramal dos Carobas;Guajará;13.0;3;4.5;3;0.5777
+40;ramal-sao-pedro-de-irecema-itacoatiara;Ramal / estrada vicinal;Ramal São Pedro de Irecema;Itacoatiara;1.34;3;3.5;2;0.5669
+41;ramal-santa-maria-iranduba;Ramal / estrada vicinal;Ramal Santa Maria;Iranduba;2.5;3;4.0;3;0.5662
+42;ramal-do-badejo-guajara;Ramal / estrada vicinal;Ramal do Badejo;Guajará;32.55;3;4.0;3;0.5662
+43;ramal-sao-pedro-de-iracema-itacoatiara;Ramal / estrada vicinal;Ramal São Pedro de Iracema;Itacoatiara;5.21;3;2.5;1;0.5561
+44;estrada-formoso-codajas;Ramal / estrada vicinal;Estrada Formoso;Codajás;6.24;3;2.5;1;0.5561
+45;ramal-do-jbm-parintins;Ramal / estrada vicinal;Ramal do Jbm;Parintins;1.45;3;3.0;2;0.5554
+46;ramal-do-brasileirinho-manaus;Ramal / estrada vicinal;Ramal do Brasileirinho;Manaus;1.01;3;3.0;2;0.5554
+47;estrada-de-acesso-a-pista-de-pouso-presidente-figueiredo;Ramal / estrada vicinal;Estrada de Acesso à Pista de Pouso;Presidente Figueiredo;2.39;3;3.5;3;0.5547
+48;vicinal-maravilha-manicore;Ramal / estrada vicinal;Vicinal Maravilha;Manicoré;26.49;3;3.5;3;0.5547
+49;ramal-canela-fina-guajara;Ramal / estrada vicinal;Ramal Canela Fina;Guajará;19.71;3;4.0;4;0.554
+50;estrada-do-estanho-manicore;Ramal / estrada vicinal;Estrada do Estanho;Manicoré;143.55;3;4.5;5;0.5533
+51;ramal-das-pedras-careiro;Ramal / estrada vicinal;Ramal das Pedras;Careiro;5.96;3;2.0;1;0.5446
+52;ramal-terra-prometida-3-autazes;Ramal / estrada vicinal;Ramal Terra Prometida 3;Autazes;1.05;3;2.0;1;0.5446
+53;ramal-az3-autazes;Ramal / estrada vicinal;Ramal AZ3;Autazes;26.45;3;2.5;2;0.5439
+54;vicinal-matupiri-manicore;Ramal / estrada vicinal;Vicinal Matupiri;Manicoré;29.62;3;2.5;2;0.5439
+55;ramal-bom-futuro-rio-preto-da-eva;Ramal / estrada vicinal;Ramal Bom Futuro;Rio Preto da Eva;7.86;3;2.5;2;0.5439
+56;vicinal-lino-elias-duarte-labrea;Ramal / estrada vicinal;Vicinal Lino Elias Duarte;Lábrea;2.51;3;2.5;2;0.5439
+57;ramal-do-jequitiba-labrea;Ramal / estrada vicinal;Ramal do Jequitibá;Lábrea;12.9;3;3.0;3;0.5432
+58;ramal-do-tucumanduba-presidente-figueiredo;Ramal / estrada vicinal;Ramal do Tucumanduba;Presidente Figueiredo;11.82;3;3.0;3;0.5432
+59;estrada-da-mineradora-presidente-figueiredo;Ramal / estrada vicinal;Estrada da Mineradora;Presidente Figueiredo;59.53;3;4.5;6;0.5411
+60;ramal-az4-autazes;Ramal / estrada vicinal;Ramal AZ4;Autazes;12.41;3;1.5;1;0.5331
+61;ramal-do-13-careiro;Ramal / estrada vicinal;Ramal do 13;Careiro;10.4;3;1.5;1;0.5331
+62;estrada-ubm-presidente-figueiredo;Ramal / estrada vicinal;Estrada UBM;Presidente Figueiredo;2.0;3;2.0;2;0.5324
+63;estrada-do-tauaruha-labrea;Ramal / estrada vicinal;Estrada do Tauaruhã;Lábrea;5.89;3;2.0;2;0.5324
+64;ramal-cabeceira-do-purupuru-careiro;Ramal / estrada vicinal;Ramal Cabeceira do Purupurú;Careiro;8.77;3;2.5;3;0.5317
+65;ramal-do-barro-alto-manaquiri;Ramal / estrada vicinal;Ramal do Barro Alto;Manaquiri;17.0;3;2.5;3;0.5317
+66;ramal-do-acara-manaus;Ramal / estrada vicinal;Ramal do Acará;Manaus;1.0;2;7.0;1;0.53
+67;ramal-do-baixo-rio-rio-preto-da-eva;Ramal / estrada vicinal;Ramal do Baixo Rio;Rio Preto da Eva;13.65;2;8.0;3;0.5286
+68;ramal-do-12-careiro;Ramal / estrada vicinal;Ramal do 12;Careiro;7.09;3;1.0;1;0.5216
+69;ramal-do-11-careiro;Ramal / estrada vicinal;Ramal do 11;Careiro;8.47;3;1.0;1;0.5216
+70;ramal-do-21-careiro;Ramal / estrada vicinal;Ramal do 21;Careiro;7.04;3;1.0;1;0.5216
+71;ramal-do-29-autazes;Ramal / estrada vicinal;Ramal do 29;Autazes;7.92;3;1.0;1;0.5216
+72;ramal-do-km-6-careiro;Ramal / estrada vicinal;Ramal do Km 6;Careiro;6.51;3;1.0;1;0.5216
+73;ramal-agua-branca-manaus;Ramal / estrada vicinal;Ramal Água Branca;Manaus;1.3;3;1.0;1;0.5216
+74;ramal-do-17-careiro;Ramal / estrada vicinal;Ramal do 17;Careiro;8.22;3;1.0;1;0.5216
+75;ramal-cheiro-de-terra-careiro;Ramal / estrada vicinal;Ramal Cheiro de Terra;Careiro;1.9;3;1.0;1;0.5216
+76;ramal-do-banco-rio-preto-da-eva;Ramal / estrada vicinal;Ramal do Banco;Rio Preto da Eva;19.78;3;1.5;2;0.5209
+77;ramal-do-areal-manaus;Ramal / estrada vicinal;Ramal do Areal;Manaus;6.51;3;1.5;2;0.5209
+78;vicinal-milton-maia-manicore;Ramal / estrada vicinal;Vicinal Milton Maia;Manicoré;43.13;3;1.5;2;0.5209
+79;vicinal-betao-manicore;Ramal / estrada vicinal;Vicinal Betão;Manicoré;6.52;3;1.5;2;0.5209
+80;ramal-sao-francisco-labrea;Ramal / estrada vicinal;Ramal São Francisco;Lábrea;1.64;3;1.5;2;0.5209
+81;ramal-do-boi-labrea-2;Ramal / estrada vicinal;Ramal do Boi;Lábrea;25.59;3;2.0;3;0.5202
+82;ramal-pao-de-queijo-novo-aripuana;Ramal / estrada vicinal;Ramal Pão de Queijo;Novo Aripuanã;25.13;3;2.0;3;0.5202
+83;ramal-da-neta-presidente-figueiredo;Ramal / estrada vicinal;Ramal da Neta;Presidente Figueiredo;6.34;3;2.0;3;0.5202
+84;ramal-ipiranguinha-manaus;Ramal / estrada vicinal;Ramal Ipiranguinha;Manaus;1.07;3;2.5;4;0.5195
+85;ramal-da-anta-labrea;Ramal / estrada vicinal;Ramal da Anta;Lábrea;20.7;3;2.5;4;0.5195
+86;am-364-manicore;Rodovia estadual;AM-364;Manicoré;84.39;3;3.0;5;0.5188
+87;ramal-da-fazendinha-manaus;Ramal / estrada vicinal;Ramal da Fazendinha;Manaus;2.85;3;3.0;5;0.5188
+88;ramal-do-alto-rio-rio-preto-da-eva;Ramal / estrada vicinal;Ramal do Alto Rio;Rio Preto da Eva;14.36;2;8.0;4;0.5164
+89;vicinal-sao-joaquim-manaus;Ramal / estrada vicinal;Vicinal São Joaquim;Manaus;1.27;3;1.0;2;0.5094
+90;vicinal-boa-esperanca-manicore;Ramal / estrada vicinal;Vicinal Boa Esperança;Manicoré;15.76;3;1.0;2;0.5094
+91;ramal-principe-da-paz-presidente-figueiredo;Ramal / estrada vicinal;Ramal Príncipe da Paz;Presidente Figueiredo;6.95;3;1.5;3;0.5087
+92;ramal-do-cerragro-presidente-figueiredo;Ramal / estrada vicinal;Ramal do Cerragro;Presidente Figueiredo;15.56;3;1.5;3;0.5087
+93;ramal-das-torres-labrea;Ramal / estrada vicinal;Ramal das Torres;Lábrea;13.53;3;1.5;3;0.5087
+94;vicinal-gorpinho-manicore;Ramal / estrada vicinal;Vicinal Gorpinho;Manicoré;19.92;3;1.5;3;0.5087
+95;vicinal-triunfo-manicore;Ramal / estrada vicinal;Vicinal Triunfo;Manicoré;24.63;3;1.5;3;0.5087
+96;ramal-coti-labrea;Ramal / estrada vicinal;Ramal Coti;Lábrea;13.23;3;1.5;3;0.5087
+97;estrada-souza-filho-nhamunda;Ramal / estrada vicinal;Estrada Souza Filho;Nhamundá;1.76;2;6.5;2;0.5063
+98;vicinal-matupi-manicore;Ramal / estrada vicinal;Vicinal Matupi;Manicoré;25.19;2;7.0;3;0.5056
+99;am-254-autazes-2;Rodovia estadual;AM-254;Autazes;34.6;2;8.0;5;0.5042
+100;vicinal-bom-futuro-manicore;Ramal / estrada vicinal;Vicinal Bom Futuro;Manicoré;13.6;3;1.5;4;0.4965
+101;ramal-do-bacuri-autazes;Ramal / estrada vicinal;Ramal do Bacuri;Autazes;1.79;2;5.5;1;0.4955
+102;estrada-do-aeroporto-borba;Ramal / estrada vicinal;Estrada do Aeroporto;Borba;2.75;2;6.0;2;0.4948
+103;vicinal-pito-aceso-manicore;Ramal / estrada vicinal;Vicinal Pito Aceso;Manicoré;10.09;2;6.0;2;0.4948
+104;estrada-camila-dangelo-manacapuru;Ramal / estrada vicinal;Estrada Camila Dangelo;Manacapuru;1.63;2;6.0;2;0.4948
+105;estrada-dos-encarnados-ipixuna;Ramal / estrada vicinal;Estrada dos Encarnados;Ipixuna;2.55;2;6.5;3;0.4941
+106;ramal-do-28-autazes;Ramal / estrada vicinal;Ramal do 28;Autazes;15.26;3;1.0;4;0.485
+107;ramal-do-paulista-presidente-figueiredo;Ramal / estrada vicinal;Ramal do Paulista;Presidente Figueiredo;25.17;3;2.0;6;0.4836
+108;estrada-da-utm-2-manaus;Ramal / estrada vicinal;Estrada da UTM 2;Manaus;1.29;2;5.5;2;0.4833
+109;estrada-joao-bota-maues;Ramal / estrada vicinal;Estrada João Bota;Maués;2.95;2;5.5;2;0.4833
+110;estrada-do-massauari-boa-vista-do-ramos;Ramal / estrada vicinal;Estrada do Massauari;Boa Vista do Ramos;10.54;2;5.5;2;0.4833
+111;estrada-do-ferrugem-jurua;Ramal / estrada vicinal;Estrada do Ferrugem;Juruá;2.84;2;5.5;2;0.4833
+112;estrada-do-paranagua-jurua;Ramal / estrada vicinal;Estrada do Paranaguá;Juruá;3.16;2;5.5;2;0.4833
+113;estrada-de-iranduba-iranduba;Ramal / estrada vicinal;Estrada de Iranduba;Iranduba;2.47;2;6.0;3;0.4826
+114;estrada-do-jatuarana-borba;Ramal / estrada vicinal;Estrada do Jatuarana;Borba;2.45;2;6.0;3;0.4826
+115;estrada-sao-benedito-boa-vista-do-ramos;Ramal / estrada vicinal;Estrada São Benedito;Boa Vista do Ramos;8.02;2;6.0;3;0.4826
+116;estrada-mariua-barcelos;Ramal / estrada vicinal;Estrada Mariuá;Barcelos;5.14;2;6.5;4;0.4819
+117;ramal-sulivam-portela-francisca-mendez-rio-preto-da-eva;Ramal / estrada vicinal;Ramal Sulivam Portela / Francisca Mendez;Rio Preto da Eva;21.67;2;7.0;5;0.4812
+118;ramal-do-acara-manaus-2;Ramal / estrada vicinal;Ramal do Acará;Manaus;1.58;2;4.5;1;0.4725
+119;estrada-tres-marias-manaus;Ramal / estrada vicinal;Estrada Três Marias;Manaus;3.61;2;4.5;1;0.4725
+120;estrada-guaranopoles-maues;Ramal / estrada vicinal;Estrada Guaranopoles;Maués;1.82;2;4.5;1;0.4725
+121;estrada-anama-cuia-anama;Ramal / estrada vicinal;Estrada Anama Cuia;Anamã;1.55;2;5.0;2;0.4718
+122;estrada-urucacanga-nova-olinda-do-norte;Ramal / estrada vicinal;Estrada Urucaçanga;Nova Olinda do Norte;2.21;2;5.0;2;0.4718
+123;estrada-da-vila-parintins;Ramal / estrada vicinal;Estrada da Vila;Parintins;19.3;2;5.0;2;0.4718
+124;estrada-do-vicente-jutai;Ramal / estrada vicinal;Estrada do Vicente;Jutaí;1.47;2;5.0;2;0.4718
+125;estrada-pni-2-pauini;Ramal / estrada vicinal;Estrada Pni 2;Pauini;1.55;2;5.5;3;0.4711
+126;am-354-careiro;Rodovia estadual;AM-354;Careiro;43.25;2;6.5;5;0.4697
+127;am-174-novo-aripuana;Rodovia estadual;AM-174;Novo Aripuanã;277.96;2;7.0;6;0.469
+128;am-240-presidente-figueiredo-2;Rodovia estadual;AM-240;Presidente Figueiredo;60.79;2;7.5;7;0.4683
+129;ramal-sao-joao-maues;Ramal / estrada vicinal;Ramal São João;Maués;1.05;2;4.5;2;0.4603
+130;estrada-do-aninga-parintins;Ramal / estrada vicinal;Estrada do Aninga;Parintins;4.62;2;5.0;3;0.4596
+131;estrada-para-praia-dourada-manaus;Ramal / estrada vicinal;Estrada para Praia Dourada;Manaus;3.58;2;6.5;6;0.4575
+132;ramal-sao-jose-manacapuru;Ramal / estrada vicinal;Ramal São José;Manacapuru;1.84;2;3.5;1;0.4495
+133;estrada-do-parananema-parintins;Ramal / estrada vicinal;Estrada do Parananema;Parintins;1.91;2;3.5;1;0.4495
+134;estrada-sao-paulo-maues;Ramal / estrada vicinal;Estrada São Paulo;Maués;1.05;2;3.5;1;0.4495
+135;estrada-maraa-barcelos-maraa;Ramal / estrada vicinal;Estrada Maraã - Barcelos;Maraã;2.55;2;3.5;1;0.4495
+136;vicinal-alto-crato-humaita;Ramal / estrada vicinal;Vicinal Alto Crato;Humaitá;14.7;2;4.0;2;0.4488
+137;ramal-sao-carlos-manaus;Ramal / estrada vicinal;Ramal São Carlos;Manaus;1.13;2;4.0;2;0.4488
+138;ramal-da-josefa-autazes;Ramal / estrada vicinal;Ramal da Josefa;Autazes;3.97;2;4.0;2;0.4488
+139;estrada-do-caiado-manacapuru;Ramal / estrada vicinal;Estrada do Caiado;Manacapuru;1.17;2;4.0;2;0.4488
+140;ramal-da-morena-presidente-figueiredo;Ramal / estrada vicinal;Ramal da Morena;Presidente Figueiredo;40.38;2;4.0;2;0.4488
+141;estrada-do-piquia-itacoatiara;Ramal / estrada vicinal;Estrada do Piquiá;Itacoatiara;10.08;2;4.0;2;0.4488
+142;estrada-do-gama-guajara;Ramal / estrada vicinal;Estrada do Gama;Guajará;32.11;2;5.0;4;0.4474
+143;ramal-chico-mendes-manaus;Ramal / estrada vicinal;Ramal Chico Mendes;Manaus;4.04;2;5.5;5;0.4467
+144;estrada-do-aeroporto-tefe;Ramal / estrada vicinal;Estrada do Aeroporto;Tefé;15.46;1;9.0;1;0.4464
+145;estrada-do-bexiga-tefe;Ramal / estrada vicinal;Estrada do Bexiga;Tefé;2.38;1;9.0;1;0.4464
+146;estrada-das-missoes-tefe;Ramal / estrada vicinal;Estrada das Missões;Tefé;3.04;1;9.0;1;0.4464
+147;ramal-terra-prometida-2-autazes;Ramal / estrada vicinal;Ramal Terra Prometida 2;Autazes;1.64;2;3.0;1;0.438
+148;ramal-terra-prometida-1-autazes;Ramal / estrada vicinal;Ramal Terra Prometida 1;Autazes;2.05;2;3.0;1;0.438
+149;ramal-aguas-brancas-2-manaus;Ramal / estrada vicinal;Ramal Águas Brancas 2;Manaus;5.54;2;3.5;2;0.4373
+150;estrada-do-janauari-iranduba;Ramal / estrada vicinal;Estrada do Janauari;Iranduba;7.71;2;5.0;5;0.4352
+151;estrada-amazonino-mendes-manaus;Ramal / estrada vicinal;Estrada Amazonino Mendes;Manaus;9.41;2;5.5;6;0.4345
+152;ramal-do-xida-eirunepe;Ramal / estrada vicinal;Ramal do Xidá;Eirunepé;13.73;2;3.5;3;0.4251
+153;ramal-do-caldeirao-iranduba;Ramal / estrada vicinal;Ramal do Caldeirão;Iranduba;28.73;2;5.0;6;0.423
+154;estrada-do-marapata-manaus;Ramal / estrada vicinal;Estrada do Marapatá;Manaus;3.12;1;8.5;2;0.4227
+155;estrada-do-miriti-careiro-da-varzea;Ramal / estrada vicinal;Estrada do Miriti;Careiro da Várzea;16.45;2;2.0;1;0.415
+156;ramal-do-baiano-manaus;Ramal / estrada vicinal;Ramal do Baiano;Manaus;1.54;2;2.5;2;0.4143
+157;estrada-camanaus-sao-gabriel-da-cachoeira;Ramal / estrada vicinal;Estrada Camanaus;São Gabriel da Cachoeira;8.13;2;2.5;2;0.4143
+158;ramal-do-baiano-2-manaus;Ramal / estrada vicinal;Ramal do Baiano 2;Manaus;1.42;2;3.0;3;0.4136
+159;ramal-das-castanheiras-manaus;Ramal / estrada vicinal;Ramal das Castanheiras;Manaus;7.89;2;3.0;3;0.4136
+160;estrada-sao-bento-boa-vista-do-ramos;Ramal / estrada vicinal;Estrada São Bento;Boa Vista do Ramos;6.02;2;3.0;3;0.4136
+161;ramal-chisa-iranduba;Ramal / estrada vicinal;Ramal Chisa;Iranduba;4.39;1;8.0;2;0.4112
+162;estrada-alvaraes-nogueira-alvaraes;Ramal / estrada vicinal;Estrada Alvarães Nogueira;Alvarães;12.81;1;8.0;2;0.4112
+163;estrada-cardoso-benjamin-constant;Ramal / estrada vicinal;Estrada Cardoso;Benjamin Constant;3.89;1;8.0;2;0.4112
+164;estrada-do-frigorifico-autazes;Ramal / estrada vicinal;Estrada do Frigorífico;Autazes;2.12;1;8.0;2;0.4112
+165;am-254-autazes;Rodovia estadual;AM-254;Autazes;93.79;2;5.0;7;0.4108
+166;am-010-itacoatiara;Rodovia estadual;AM-010;Itacoatiara;256.73;1;10.0;6;0.4084
+167;ramal-ze-carlos-parintins;Ramal / estrada vicinal;Ramal Zé Carlos;Parintins;1.4;2;2.0;2;0.4028
+168;ramal-fe-em-deus-presidente-figueiredo;Ramal / estrada vicinal;Ramal Fé em Deus;Presidente Figueiredo;1.62;2;2.0;2;0.4028
+169;estrada-da-agrovila-jurua;Ramal / estrada vicinal;Estrada da Agrovila;Juruá;4.89;2;2.0;2;0.4028
+170;estrada-autazes-rosarinho-autazes;Ramal / estrada vicinal;Estrada Autazes Rosarinho;Autazes;3.27;2;2.0;2;0.4028
+171;estrada-do-porto-rico-ipixuna;Ramal / estrada vicinal;Estrada do Porto Rico;Ipixuna;14.32;2;2.5;3;0.4021
+172;estrada-da-bare-fonte-boa;Ramal / estrada vicinal;Estrada da Bare;Fonte Boa;3.53;1;7.0;1;0.4004
+173;estrada-do-monte-cristo-manacapuru;Ramal / estrada vicinal;Estrada do Monte Cristo;Manacapuru;2.44;1;7.0;1;0.4004
+174;ramal-do-pau-rosa-manaus;Ramal / estrada vicinal;Ramal do Pau Rosa;Manaus;32.28;2;4.0;6;0.4
+175;estrada-do-aeroporto-santa-isabel-do-rio-negro;Ramal / estrada vicinal;Estrada do Aeroporto;Santa Isabel do Rio Negro;3.78;1;7.5;2;0.3997
+176;ramal-cabeca-de-bode-iranduba;Ramal / estrada vicinal;Ramal Cabeça de Bode;Iranduba;1.79;1;7.5;2;0.3997
+177;estrada-amatura-boia-amatura;Ramal / estrada vicinal;Estrada Amaturá-Bóia;Amaturá;5.56;1;7.5;2;0.3997
+178;estrada-do-aeroporto-anama;Ramal / estrada vicinal;Estrada do Aeroporto;Anamã;21.2;1;8.0;3;0.399
+179;ramal-santo-antonio-iranduba;Ramal / estrada vicinal;Ramal Santo Antônio;Iranduba;3.93;1;8.0;3;0.399
+180;estrada-cachoeirinha-sao-gabriel-da-cachoeira;Ramal / estrada vicinal;Estrada Cachoeirinha;São Gabriel da Cachoeira;6.4;1;8.0;3;0.399
+181;ramal-sao-jose-careiro;Ramal / estrada vicinal;Ramal São José;Careiro;14.53;2;1.0;1;0.392
+182;ramal-do-reis-parintins;Ramal / estrada vicinal;Ramal do Reis;Parintins;1.74;2;1.5;2;0.3913
+183;ramal-sete-manaus;Ramal / estrada vicinal;Ramal Sete;Manaus;1.87;2;2.5;4;0.3899
+184;estrada-do-aeroporto-novo-aripuana;Ramal / estrada vicinal;Estrada do Aeroporto;Novo Aripuanã;1.08;1;6.5;1;0.3889
+185;estrada-da-producao-barcelos;Ramal / estrada vicinal;Estrada da Produção;Barcelos;2.42;1;6.5;1;0.3889
+186;estrada-barcelos-caures-barcelos;Ramal / estrada vicinal;Estrada Barcelos Caurés;Barcelos;21.03;1;6.5;1;0.3889
+187;estrada-do-aeroporto-fonte-boa;Ramal / estrada vicinal;Estrada do Aeroporto;Fonte Boa;2.5;1;7.0;2;0.3882
+188;estrada-do-aeroporto-manacapuru;Ramal / estrada vicinal;Estrada do Aeroporto;Manacapuru;1.71;1;7.0;2;0.3882
+189;estrada-feliciano-sa-manicore;Ramal / estrada vicinal;Estrada Feliciano Sá;Manicoré;6.9;1;7.0;2;0.3882
+190;ramal-do-luso-manaus;Ramal / estrada vicinal;Ramal do Luso;Manaus;1.47;1;7.0;2;0.3882
+191;estrada-do-tupe-fonte-boa;Ramal / estrada vicinal;Estrada do Tupe;Fonte Boa;9.18;1;7.0;2;0.3882
+192;estrada-do-breu-jutai;Ramal / estrada vicinal;Estrada do Breu;Jutaí;9.49;1;7.0;2;0.3882
+193;estrada-da-hospedaria-manaus;Ramal / estrada vicinal;Estrada da Hospedaria;Manaus;1.04;1;7.5;3;0.3875
+194;am-070-iranduba;Rodovia estadual;AM-070;Iranduba;152.71;1;9.0;6;0.3854
+195;am-352-iranduba;Rodovia estadual;AM-352;Iranduba;98.76;1;9.0;6;0.3854
+196;ramal-oito-manaus;Ramal / estrada vicinal;Ramal Oito;Manaus;3.1;2;2.0;4;0.3784
+197;estrada-do-aeroporto-itacoatiara;Ramal / estrada vicinal;Estrada do Aeroporto;Itacoatiara;2.92;1;6.0;1;0.3774
+198;estrada-do-sindicato-manicore;Ramal / estrada vicinal;Estrada do Sindicato;Manicoré;2.6;1;6.0;1;0.3774
+199;estrada-do-mapia-borba;Ramal / estrada vicinal;Estrada do Mapia;Borba;2.98;1;6.0;1;0.3774
+200;estrada-umarizal-benjamin-constant;Ramal / estrada vicinal;Estrada Umarizal;Benjamin Constant;2.79;1;6.5;2;0.3767
+201;ramal-do-laguinho-iranduba;Ramal / estrada vicinal;Ramal do Laguinho;Iranduba;4.44;1;6.5;2;0.3767
+202;estrada-do-dara-santa-isabel-do-rio-negro;Ramal / estrada vicinal;Estrada do Dara;Santa Isabel do Rio Negro;2.31;1;6.5;2;0.3767
+203;estrada-treze-de-maio-benjamin-constant;Ramal / estrada vicinal;Estrada Treze de Maio;Benjamin Constant;2.41;1;7.0;3;0.376
+204;estrada-sudhevea-manicore;Ramal / estrada vicinal;Estrada Sudhevea;Manicoré;3.5;1;5.5;1;0.3659
+205;estrada-do-aeroporto-labrea;Ramal / estrada vicinal;Estrada do Aeroporto;Lábrea;3.09;1;6.0;2;0.3652
+206;estrada-da-ponta-negra-manaus;Ramal / estrada vicinal;Estrada da Ponta Negra;Manaus;1.7;1;6.0;2;0.3652
+207;estrada-cunha-gomes-atalaia-do-norte;Ramal / estrada vicinal;Estrada Cunha Gomes;Atalaia do Norte;1.25;1;6.0;2;0.3652
+208;estrada-do-macurany-parintins;Ramal / estrada vicinal;Estrada do Macurany;Parintins;4.51;1;6.0;2;0.3652
+209;estrada-sao-salvador-santo-antonio-do-ica;Ramal / estrada vicinal;Estrada São Salvador;Santo Antônio do Içá;1.63;1;6.0;2;0.3652
+210;estrada-do-pantanal-santo-antonio-do-ica;Ramal / estrada vicinal;Estrada do Pantanal;Santo Antônio do Içá;1.52;1;6.0;2;0.3652
+211;estrada-da-fabrica-de-cimento-manaus;Ramal / estrada vicinal;Estrada da Fábrica de Cimento;Manaus;1.56;1;6.5;3;0.3645
+212;estrada-sao-francisco-sao-sebastiao-do-uatuma;Ramal / estrada vicinal;Estrada São Francisco;São Sebastião do Uatumã;1.8;1;6.5;3;0.3645
+213;ramal-da-coruja-apui;Ramal / estrada vicinal;Ramal da Coruja;Apuí;19.58;1;6.5;3;0.3645
+214;estrada-manoel-urbano-iranduba;Ramal / estrada vicinal;Estrada Manoel Urbano;Iranduba;1.64;1;7.0;4;0.3638
+215;am-363-silves;Rodovia estadual;AM-363;Silves;112.93;1;7.5;5;0.3631
+216;estrada-do-japo-jurua;Ramal / estrada vicinal;Estrada do Japó;Juruá;5.95;1;5.5;2;0.3537
+217;estrada-macuti-pauini;Ramal / estrada vicinal;Estrada Macuti;Pauini;1.16;1;5.5;2;0.3537
+218;estrada-do-igarape-grande-jurua;Ramal / estrada vicinal;Estrada do Igarapé Grande;Juruá;4.19;1;5.5;2;0.3537
+219;estrada-nova-italia-amatura;Ramal / estrada vicinal;Estrada Nova Itália;Amaturá;3.74;1;5.5;2;0.3537
+220;am-330-silves;Rodovia estadual;AM-330;Silves;15.67;1;6.0;3;0.353
+221;ramal-do-ipiranga-manaus;Ramal / estrada vicinal;Ramal do Ipiranga;Manaus;5.52;1;6.0;3;0.353
+222;estrada-concordia-envira;Ramal / estrada vicinal;Estrada Concórdia;Envira;9.88;1;6.0;3;0.353
+223;estrada-do-mariano-envira;Ramal / estrada vicinal;Estrada do Mariano;Envira;11.23;1;6.0;3;0.353
+224;estrada-do-cacau-envira;Ramal / estrada vicinal;Estrada do Cacau;Envira;1.55;1;6.0;3;0.353
+225;estrada-dos-moraes-maues;Ramal / estrada vicinal;Estrada dos Moraes;Maués;3.66;1;6.0;3;0.353
+226;estrada-miri-moraes-maues;Ramal / estrada vicinal;Estrada Miri Moraes;Maués;1.71;1;6.0;3;0.353
+227;estrada-do-ajaratuba-sao-paulo-de-olivenca;Ramal / estrada vicinal;Estrada do Ajaratuba;São Paulo de Olivença;2.0;1;6.0;3;0.353
+228;estrada-pn-i-pauini;Ramal / estrada vicinal;Estrada Pn I;Pauini;1.5;1;6.0;3;0.353
+229;estrada-do-bacabal-maues;Ramal / estrada vicinal;Estrada do Bacabal;Maués;3.63;1;4.5;1;0.3429
+230;estrada-do-aeroporto-sao-paulo-de-olivenca;Ramal / estrada vicinal;Estrada do Aeroporto;São Paulo de Olivença;1.27;1;5.0;2;0.3422
+231;estrada-da-vivenda-verde-manaus;Ramal / estrada vicinal;Estrada da Vivênda Verde;Manaus;3.16;1;5.0;2;0.3422
+232;estrada-sao-joao-maues;Ramal / estrada vicinal;Estrada São João;Maués;1.63;1;5.5;3;0.3415
+233;estrada-do-inaja-manicore;Ramal / estrada vicinal;Estrada do Inajá;Manicoré;9.67;1;4.0;1;0.3314
+234;estrada-de-novo-remanso-itacoatiara;Ramal / estrada vicinal;Estrada de Novo Remanso;Itacoatiara;3.17;1;4.0;1;0.3314
+235;ramal-do-bancrevea-manaus;Ramal / estrada vicinal;Ramal do Bancrevea;Manaus;3.91;1;4.5;2;0.3307
+236;estrada-lago-do-januari-iranduba;Ramal / estrada vicinal;Estrada Lago do Januari;Iranduba;13.92;1;4.5;2;0.3307
+237;estrada-do-igarape-da-roca-carauari;Ramal / estrada vicinal;Estrada do Igarapé da Roça;Carauari;2.07;1;4.5;2;0.3307
+238;ramal-amazonas-manaus;Ramal / estrada vicinal;Ramal Amazonas;Manaus;2.13;1;4.5;2;0.3307
+239;ramal-do-calado-manacapuru;Ramal / estrada vicinal;Ramal do Calado;Manacapuru;5.42;1;4.5;2;0.3307
+240;estrada-da-varzea-ipixuna;Ramal / estrada vicinal;Estrada da Várzea;Ipixuna;1.79;1;5.0;3;0.33
+241;ramal-cachoeira-do-castanho-iranduba;Ramal / estrada vicinal;Ramal Cachoeira do Castanho;Iranduba;6.25;1;5.0;3;0.33
+242;estrada-manoel-cobrinha-envira;Ramal / estrada vicinal;Estrada Manoel Cobrinha;Envira;1.85;1;5.0;3;0.33
+243;estrada-do-riozinho-carauari;Ramal / estrada vicinal;Estrada do Riozinho;Carauari;15.82;1;6.0;5;0.3286
+244;estrada-malibu-manaus;Ramal / estrada vicinal;Estrada Malibu;Manaus;2.3;1;3.5;1;0.3199
+245;estrada-14-bis-carauari;Ramal / estrada vicinal;Estrada 14 Bis;Carauari;1.3;1;4.0;2;0.3192
+246;estrada-sao-sebastiao-envira;Ramal / estrada vicinal;Estrada São Sebastião;Envira;1.83;1;4.5;3;0.3185
+247;estrada-coari-itapeua-coari;Ramal / estrada vicinal;Estrada Coari Itapeua;Coari;20.43;0;9.0;1;0.3168
+248;estrada-da-floresta-guajara;Ramal / estrada vicinal;Estrada da Floresta;Guajará;17.78;1;4.5;4;0.3063
+249;estrada-de-acesso-a-vila-de-paricatuba-iranduba;Ramal / estrada vicinal;Estrada de Acesso a Vila de Paricatuba;Iranduba;9.86;1;4.5;4;0.3063
+250;estrada-do-dabaru-sao-gabriel-da-cachoeira;Ramal / estrada vicinal;Estrada do Dabaru;São Gabriel da Cachoeira;1.17;0;8.0;2;0.2816
+251;am-452-iranduba;Rodovia estadual;AM-452;Iranduba;10.23;0;8.0;3;0.2694
+252;estrada-do-brasileirinho-manaus;Ramal / estrada vicinal;Estrada do Brasileirinho;Manaus;11.97;0;8.0;3;0.2694
+253;ramal-dez-manaus;Ramal / estrada vicinal;Ramal Dez;Manaus;2.01;1;1.5;2;0.2617
+254;ramal-15-manaus;Ramal / estrada vicinal;Ramal 15;Manaus;1.78;0;6.0;1;0.2478
+255;estrada-do-translago-boca-do-acre;Ramal / estrada vicinal;Estrada do Translago;Boca do Acre;3.65;0;6.0;2;0.2356
+256;estrada-do-barreiro-labrea;Ramal / estrada vicinal;Estrada do Barreiro;Lábrea;3.12;0;6.0;2;0.2356
+257;estrada-parintins-macurany-parintins;Ramal / estrada vicinal;Estrada Parintins Macurany;Parintins;4.28;0;6.0;2;0.2356
+258;estrada-sao-francisco-tonantins;Ramal / estrada vicinal;Estrada São Francisco;Tonantins;3.94;0;6.5;3;0.2349
+259;ramal-palmeira-azul-manaus;Ramal / estrada vicinal;Ramal Palmeira Azul;Manaus;3.96;0;6.0;3;0.2234
+260;estrada-odovaldo-novo-parintins;Ramal / estrada vicinal;Estrada Odovaldo Novo;Parintins;8.19;0;6.0;3;0.2234
+261;estrada-da-marina-rio-belo-manaus;Ramal / estrada vicinal;Estrada da Marina Rio Belo;Manaus;2.47;0;6.5;4;0.2227
+262;estrada-do-gaviao-carauari;Ramal / estrada vicinal;Estrada do Gavião;Carauari;7.01;0;5.0;2;0.2126
+263;estrada-trans-lago-boca-do-acre;Ramal / estrada vicinal;Estrada Trans Lago;Boca do Acre;1.1;0;4.5;2;0.2011
+264;am-240-presidente-figueiredo;Rodovia estadual;AM-240;Presidente Figueiredo;20.7;0;5.5;4;0.1997
+265;estrada-do-triangulo-guajara;Ramal / estrada vicinal;Estrada do Triângulo;Guajará;1.43;0;4.5;3;0.1889
