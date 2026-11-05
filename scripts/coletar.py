@@ -183,22 +183,34 @@ if not ja_tem("osm_conexoes.json"):
     salvar("osm_conexoes.json", {"elements": list(juntos.values())})
     print("ok osm_conexoes.json", len(juntos))
 
-# água, várzea e pontes: IBGE BC250 (2025), só nas células de 1° tocadas pelas vias
+# água, várzea e pontes: IBGE BC250 (2025), só nas células de 1° tocadas pelas vias (OSM e ramais SEINFRA).
+# Incremental: guarda as células já baixadas e só busca as que faltam.
 BC = "https://geoservicos.ibge.gov.br/geoserver/wfs"
 CAMADAS_BC = {"drenagem": "CCAR:BC250_2025_hid_trecho_drenagem_l", "inundacao": "CCAR:BC250_2025_hid_terreno_sujeito_inundacao_a",
               "ponte_l": "CCAR:BC250_2025_tra_ponte_l", "ponte_p": "CCAR:BC250_2025_tra_ponte_p"}
-if not ja_tem("ibge_bc250.json"):
-    celulas = set()
-    for arq in ("osm_ramais.json", "osm_rodovias.json"):
-        for e in json.loads((RAW / arq).read_text(encoding="utf-8"))["elements"]:
-            for p in e.get("geometry", []):
-                if p:
-                    celulas.add((math.floor(p["lon"]), math.floor(p["lat"])))
-    print("   células BC250:", len(celulas))
-    saida = {k: [] for k in CAMADAS_BC}
+SHP_RAMAIS = RAIZ.parent / "3-RAMAIS" / "1-TRAÇADO RAMAIS" / "RAMAIS - TRAÇADO REV06 - 16-05-2025" / "VICINAIS-RAMAIS-ESTRADAS - SEINFRA 2025.shp"
+celulas_osm = set()
+for arq in ("osm_ramais.json", "osm_rodovias.json"):
+    for e in json.loads((RAW / arq).read_text(encoding="utf-8"))["elements"]:
+        for p in e.get("geometry", []):
+            if p:
+                celulas_osm.add((math.floor(p["lon"]), math.floor(p["lat"])))
+celulas = set(celulas_osm)
+if SHP_RAMAIS.exists():
+    import shapefile
+    for shp in shapefile.Reader(str(SHP_RAMAIS), encoding="utf-8").iterShapes():
+        celulas.update((math.floor(x), math.floor(y)) for x, y, *_ in shp.points)
+bc_atual = json.loads((RAW / "ibge_bc250.json").read_text(encoding="utf-8")) if (RAW / "ibge_bc250.json").exists() and not FORCE else None
+feitas = {tuple(c) for c in bc_atual.get("celulas", [])} if bc_atual else set()
+if bc_atual and not feitas:
+    feitas = celulas_osm  # arquivo antigo, baixado só com as células do OSM
+faltam = sorted(celulas - feitas)
+if faltam:
+    print("   células BC250 a baixar:", len(faltam), "de", len(celulas))
+    saida = bc_atual or {k: [] for k in CAMADAS_BC}
     for k, layer in CAMADAS_BC.items():
-        vistos = set()
-        for x, y in sorted(celulas):
+        vistos = {f.get("id") or json.dumps(f["geometry"])[:200] for f in saida[k]}
+        for x, y in faltam:
             url = (f"{BC}?service=WFS&version=1.0.0&request=GetFeature&typeName={layer}&outputFormat=application/json"
                    f"&srsName=EPSG:4326&bbox={x},{y},{x + 1},{y + 1},EPSG:4326")
             for f in js(get(url))["features"]:
@@ -206,6 +218,35 @@ if not ja_tem("ibge_bc250.json"):
                 if chave not in vistos and f.get("geometry"):
                     vistos.add(chave); saida[k].append(f)
         print("   ", k, len(saida[k]))
+    saida["celulas"] = sorted(celulas)
     salvar("ibge_bc250.json", saida)
     print("ok ibge_bc250.json")
+else:
+    print("ok (cache) ibge_bc250.json")
+
+# massas d'água do BC250 (rios largos e lagos) no estado todo: base para terminais hidroviários
+if not ja_tem("ibge_massa_dagua.json"):
+    from shapely.geometry import shape, mapping
+    feats, vistos = [], set()
+    for x in range(math.floor(BBOX_AM[0]), math.ceil(BBOX_AM[2])):
+        for y in range(math.floor(BBOX_AM[1]), math.ceil(BBOX_AM[3])):
+            url = (f"{BC}?service=WFS&version=1.0.0&request=GetFeature&typeName=CCAR:BC250_2025_hid_massa_dagua_a&outputFormat=application/json"
+                   f"&srsName=EPSG:4326&bbox={x},{y},{x + 1},{y + 1},EPSG:4326")
+            for f in js(get(url))["features"]:
+                if f.get("id") in vistos or not f.get("geometry"):
+                    continue
+                vistos.add(f.get("id"))
+                g = shape(f["geometry"]).simplify(0.0005)  # ~50 m: basta para medir distância à margem
+                if not g.is_empty:
+                    feats.append({"type": "Feature", "geometry": mapping(g), "properties": {"nome": f["properties"].get("nome"), "tipo": f["properties"].get("tipomassadagua")}})
+        print("   massa d'água: coluna", x, len(feats))
+    salvar("ibge_massa_dagua.json", {"type": "FeatureCollection", "features": feats})
+    print("ok ibge_massa_dagua.json", len(feats))
+ANAC = "https://sistemas.anac.gov.br/dadosabertos/Aerodromos/"
+for nome, caminho in (("anac_publicos.csv", "Aeródromos Públicos/Lista de aeródromos públicos/AerodromosPublicos.csv"),
+                      ("anac_privados.csv", "Aeródromos Privados/Lista de aeródromos privados/Aerodromos Privados/AerodromosPrivados.csv")):
+    if not ja_tem(nome):
+        # cadastro oficial da ANAC (públicos e privados), separador ";" e texto em latin1
+        (RAW / nome).write_bytes(get(ANAC + requests.utils.quote(caminho)).content)
+        print("ok", nome)
 print("coleta concluída")

@@ -1,8 +1,20 @@
-# Plataforma de Priorização de Obras Viárias — Amazonas
+# Plataforma de Priorização de Obras de Infraestrutura — Amazonas
 
 Mapa georreferenciado que ordena **ramais e rodovias estaduais** do Amazonas pelo método AHP do artigo
 *Modelo de Priorização de Obras de Infraestrutura de Rodovias e Vicinais para o Estado do Amazonas com base em Análise Multicritério* (UNINORTE, 2023),
-cruzando o traçado de ramais da SEINFRA-AM (REV06, 16/05/2025) com dados do IBGE, CNES, INPE, IPHAN, OpenStreetMap e relevo SRTM. Gera relatório imprimível por via e do ranking geral.
+cruzando o traçado de ramais da SEINFRA-AM (REV06, 16/05/2025) com dados do IBGE, CNES, INPE, IPHAN, OpenStreetMap e relevo SRTM. Gera relatório imprimível por via e do ranking geral, com texto explicando a posição de cada item.
+
+Módulos (abas no topo do painel):
+
+| Módulo | O que ordena | Critérios |
+|---|---|---|
+| Ramais e rodovias | 905 trechos SEINFRA + rodovias AM-xxx | AHP do artigo (V, D, F) + peso opcional do REGIC (0–30 %) |
+| Terminais flutuantes | Núcleos do Censo 2022 à margem de rio largo ou lago | Vulnerabilidade de transporte (0–5), demanda (moradores), REGIC |
+| Aeródromos | Núcleos com 1.000+ moradores | Vulnerabilidade (sem aeródromo público ou nenhum a 50 km, sem via, hospital a 100 km, REGIC aeroporto), demanda (pessoas sem aeródromo a 50 km), REGIC |
+| Saúde e cobertura | — | Onde falta atenção primária (5 km), demanda atendida por unidade (referência 3.500 pessoas/equipe), aeródromos e pessoas atendidas, indicadores por município (leitos 2,5/mil) |
+| REGIC | 62 municípios | Hierarquia urbana, vínculos e deslocamentos do REGIC 2018 (resumo em `../REGIC IBGE/REGIC_2018_RESUMO.md`) |
+
+Núcleos = setores urbanos e aglomerados rurais do Censo 2022 agrupados por contiguidade, mais comunidades formadas por domicílios do CNEFE 2022 em setores rurais (≥ 100 pessoas).
 
 ## Estrutura
 
@@ -10,6 +22,7 @@ cruzando o traçado de ramais da SEINFRA-AM (REV06, 16/05/2025) com dados do IBG
 plataforma/
 ├── scripts/coletar.py     baixa as bases públicas para data/raw (com cache)
 ├── scripts/processar.py   monta as vias, calcula os critérios e grava docs/data
+├── scripts/processar_modulos.py  REGIC, núcleos, terminais, aeródromos e cobertura de saúde
 ├── data/raw/              dados brutos (não publicados)
 └── docs/                  plataforma estática (index.html, app.js, style.css, data/)
 ```
@@ -20,6 +33,7 @@ plataforma/
 pip install requests shapely pyshp
 python scripts/coletar.py --force     # baixa tudo de novo (sem --force usa o cache)
 python scripts/processar.py
+python scripts/processar_modulos.py   # precisa da pasta ../REGIC IBGE e de openpyxl, numpy
 ```
 
 Para testar localmente: `python -m http.server 8000 -d docs` e abrir http://localhost:8000.
@@ -38,6 +52,9 @@ Para testar localmente: `python -m http.server 8000 -d docs` e abrir http://loca
 | Rodovias AM-xxx, aeroportos, portos/flutuantes, comunidades, uso do solo, pontes, vias que cruzam | OpenStreetMap (Overpass) | Alternativas (rodovias), vulnerabilidade, uso do solo, entroncamentos, OAE |
 | Altitude | OpenTopoData — SRTM 90 m | Dificuldade: relevo; perfil de altitude |
 | Drenagem e pontes (BC250 2025) | IBGE geoservicos (WFS `CCAR:BC250_2025_*`) | Travessias de rio, pontes, OAE, várzea (estimada) |
+| Massas d'água (BC250 2025) | IBGE geoservicos | Rios largos e lagos: candidatos a terminal |
+| Aeródromos públicos e privados | ANAC dados abertos | Aeródromos existentes, cobertura |
+| REGIC 2018 | IBGE (planilhas da pasta `REGIC IBGE`) | Hierarquia, atração e deslocamentos por município |
 
 ## Critérios (versão corrigida do artigo)
 

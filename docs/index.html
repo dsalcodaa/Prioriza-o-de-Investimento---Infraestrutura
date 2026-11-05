@@ -3,20 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Priorização de Obras Viárias — Amazonas</title>
+<title>Priorização de Obras de Infraestrutura — Amazonas</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 <div id="app">
   <aside id="painel" aria-label="Painel de priorização">
     <header class="marca">
-      <h1>Priorização de obras viárias <span>Amazonas</span></h1>
-      <p>Ramais e rodovias estaduais ordenados pelo método AHP (análise multicritério), com traçado de ramais da SEINFRA-AM (2025) e dados do IBGE, CNES, INPE, IPHAN, OpenStreetMap e relevo SRTM.</p>
+      <h1>Priorização de obras de infraestrutura <span>Amazonas</span></h1>
+      <p>Ramais, rodovias, terminais hidroviários e aeródromos ordenados por análise multicritério (AHP), com dados da SEINFRA-AM, IBGE (Censo 2022, CNEFE, BC250, REGIC 2018), CNES, ANAC, INPE, IPHAN, OpenStreetMap e relevo SRTM.</p>
     </header>
+    <nav class="modulos" aria-label="Módulos">
+      <button data-mod="ramais" aria-pressed="true">Ramais e rodovias</button>
+      <button data-mod="terminais" aria-pressed="false">Terminais flutuantes</button>
+      <button data-mod="aerodromos" aria-pressed="false">Aeródromos</button>
+      <button data-mod="cobertura" aria-pressed="false">Saúde e cobertura</button>
+      <button data-mod="regic" aria-pressed="false">REGIC</button>
+    </nav>
+    <div class="mod" id="mod-ramais">
     <nav class="abas" role="tablist">
       <button role="tab" aria-selected="true" data-aba="ranking">Ranking</button>
       <button role="tab" aria-selected="false" data-aba="pesos">Pesos AHP</button>
@@ -50,6 +58,9 @@
       </table>
       <p id="cr" class="cr"></p>
       <button id="btn-reset-pesos">Voltar aos pesos do artigo</button>
+      <h3>Importância do município (REGIC 2018)</h3>
+      <p class="nota">Parte do índice dada à posição do município na rede urbana do IBGE. Com 0 % o ranking segue só o artigo.</p>
+      <div class="deslizador"><input type="range" id="rpeso" min="0" max="30" step="5" aria-label="Peso do REGIC"> <b id="rpeso-val"></b></div>
       <h3>Ajustes de campo</h3>
       <p class="nota">As notas automáticas são estimativas a partir de bases públicas. Corrija na ficha de cada via após a vistoria. Os ajustes ficam salvos neste navegador.</p>
       <div class="acoes">
@@ -94,9 +105,15 @@
           <dt>F · Dificuldade de projeto e execução (0–10)</dt>
           <dd>Relevo (SRTM: &lt;60 m = 1; 60–120 m = 2; ≥120 m = 3), terreno (terra firme 0, várzea 1, igapó 2; várzea estimada por altitude média ≤ 30 m a até 2 km de rio; igapó só por vistoria), unidade de conservação, sítio arqueológico a até 1 km, terra indígena, obras de arte especiais (0 nenhuma, 1 possui, 2 ponte precisa de intervenção, 3 precisa implantar; igarapés menores contam como bueiro). Entra invertido: mais difícil reduz a prioridade.</dd>
         </dl>
+        <p><b>REGIC</b>: o índice final é (1 − r) × índice do artigo + r × importância do município na rede urbana (REGIC 2018, de 0 a 1). O peso r vai de 0 a 30 % na aba Pesos AHP (padrão 15 %).</p>
         <p class="nota">Itens marcados como estimativa (assentamento, terreno, agricultura, população por setor) devem ser confirmados em campo. O INCRA estava fora do ar na coleta, então assentamentos vêm só de nomes no OpenStreetMap.</p>
       </div>
     </section>
+    </div>
+    <div class="mod" id="mod-terminais" data-ranking="terminais" hidden><h2 class="mod-tit">Onde implantar terminais flutuantes</h2><div class="aba" id="corpo-terminais"><p class="nota">Carregando…</p></div></div>
+    <div class="mod" id="mod-aerodromos" data-ranking="aerodromos" hidden><h2 class="mod-tit">Onde falta aeródromo</h2><div class="aba" id="corpo-aerodromos"><p class="nota">Carregando…</p></div></div>
+    <div class="mod" id="mod-cobertura" hidden><h2 class="mod-tit">Saúde e aeródromos: demanda atendida e o que falta</h2><div class="aba" id="corpo-cobertura"><p class="nota">Carregando…</p></div></div>
+    <div class="mod" id="mod-regic" hidden><h2 class="mod-tit">Importância dos municípios (REGIC 2018)</h2><div class="aba" id="corpo-regic"><p class="nota">Carregando…</p></div></div>
   </aside>
 
   <main id="mapa" aria-label="Mapa"></main>
@@ -116,6 +133,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=3"></script>
+<script src="app.js?v=6"></script>
+<script src="modulos.js?v=4"></script>
 </body>
 </html>

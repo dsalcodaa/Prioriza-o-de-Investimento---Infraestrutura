@@ -42,6 +42,7 @@ const recuperar = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?
 
 let VIAS = [], META = {}, pares = recuperar("pares", { ...PADRAO }), ajustes = recuperar("ajustes", {});
 let W = { V: 0.648, D: 0.23, F: 0.122 }, CR = 0, ordem = [], filtradas = [], selecionada = null, limite = 60;
+let REGIC = {}, RPESO = recuperar("rpeso", 0.15), subFicha = "notas"; // RPESO: parte do índice dada à importância REGIC do município
 
 /* ---------- AHP ---------- */
 function ahp() {
@@ -72,15 +73,16 @@ function notas(p) {
   const uso = ITENS.D.slice(0, 5).reduce((t, [c]) => t + valor(p, c), 0);
   const ocup = (valor(p, "n_pop") + valor(p, "n_sub")) / 2;
   const V = s(ITENS.V), D = uso + ocup, F = Math.min(10, s(ITENS.F));
-  const pv = W.V * V / 5, pd = W.D * D / 10, pf = W.F * (1 - F / 10);
-  return { V, D, F, uso, ocup, pv, pd, pf, ip: pv + pd + pf };
+  const k = 1 - RPESO, R = REGIC[p.cod_mun]?.importancia ?? 0;
+  const pv = k * W.V * V / 5, pd = k * W.D * D / 10, pf = k * W.F * (1 - F / 10), pr = RPESO * R;
+  return { V, D, F, uso, ocup, R, pv, pd, pf, pr, ip: pv + pd + pf + pr };
 }
 
 function recalcular() {
   const r = ahp();
   if (r.CR < 0.1) { W = r.w; CR = r.CR; } // matriz inconsistente não altera o ranking
   VIAS.forEach((v) => (v.n = notas(v.p)));
-  ordem = [...VIAS].sort((a, b) => b.n.ip - a.n.ip);
+  ordem = [...VIAS].sort((a, b) => (b.n.ip - a.n.ip) || (b.p.pop - a.p.pop)); // empate: mais população no entorno primeiro
   ordem.forEach((v, i) => (v.pos = i + 1));
   filtrar();
 }
@@ -118,7 +120,7 @@ function desenharLista() {
       <span class="nome">${esc(p.nome)}</span>
       <span class="ip" title="Índice de prioridade (0–100)">${fmt(n.ip * 100, 1)}</span>
       <span class="sub">${esc(p.municipio)} · ${esc(p.tipo === "Rodovia estadual" ? "rodovia" : "ramal")} · ${fmt(p.km, 1)} km</span>
-      <span class="faixa" title="Parcelas: vulnerabilidade, desenvolvimento, facilidade"><i class="v" style="width:${larg(n.pv)}"></i><i class="d" style="width:${larg(n.pd)}"></i><i class="f" style="width:${larg(n.pf)}"></i></span>
+      <span class="faixa" title="Parcelas: vulnerabilidade, desenvolvimento, facilidade, REGIC"><i class="v" style="width:${larg(n.pv)}"></i><i class="d" style="width:${larg(n.pd)}"></i><i class="f" style="width:${larg(n.pf)}"></i><i class="r" style="width:${larg(n.pr)}"></i></span>
     </li>`;
   }).join("") + (filtradas.length > limite ? `<li class="mais-li"><button class="mais" id="btn-mais">Mostrar mais ${Math.min(60, filtradas.length - limite)}</button></li>` : "");
 }
@@ -168,8 +170,9 @@ function popupLista(titulo, props, extra = "") {
 
 async function iniciar() {
   try {
-    const [vias, meta] = await Promise.all([carregar("vias.geojson"), carregar("meta.json")]);
+    const [vias, meta, regic] = await Promise.all([carregar("vias.geojson"), carregar("meta.json"), carregar("regic.json").catch(() => null)]);
     META = meta;
+    if (regic) { REGIC = Object.fromEntries(regic.municipios.map((m) => [m.cod, m])); window.REGIC_DADOS = regic; }
     camadaVias = L.geoJSON(vias, {
       onEachFeature: (f, l) => {
         const v = { p: f.properties, layer: l };
@@ -299,15 +302,81 @@ function desenharFicha() {
     <p class="ficha-sub">${esc(p.tipo)} · ${esc(p.municipio)} (${fmt(p.pop_mun || 0)} hab. em 2022) · ${fmt(p.km, 1)} km</p>
     ${dadosSeinfra(p)}
     <div class="placar"><span class="grande">${v.pos}º</span><span class="rot">de ${fmt(ordem.length)} vias no ranking geral</span>
-      <span class="grande">${fmt(n.ip * 100, 1)}</span><span class="rot">índice de prioridade (0–100)<br>vulnerabilidade ${fmt(n.pv * 100, 1)} + desenvolvimento ${fmt(n.pd * 100, 1)} + facilidade ${fmt(n.pf * 100, 1)}</span></div>
+      <span class="grande">${fmt(n.ip * 100, 1)}</span><span class="rot">índice de prioridade (0–100)<br>vulnerabilidade ${fmt(n.pv * 100, 1)} + desenvolvimento ${fmt(n.pd * 100, 1)} + facilidade ${fmt(n.pf * 100, 1)} + REGIC ${fmt(n.pr * 100, 1)}</span></div>
     <div class="acoes"><button class="primario" id="btn-rel">Relatório desta via</button><button id="btn-zoom">Aproximar no mapa</button>
       ${ajustes[p.id] ? '<button id="btn-desfazer">Desfazer ajustes desta via</button>' : ""}</div>
+    ${subAbas([["notas", "Notas e evidências"], ["porque", "Por que esta posição"]])}
+    <div data-subpainel="porque" ${subFicha === "porque" ? "" : "hidden"}>${porQue(v)}</div>
+    <div data-subpainel="notas" ${subFicha === "notas" ? "" : "hidden"}>
     ${blocoCriterio(p, "V", n.V, 5)}
     ${blocoCriterio(p, "D", n.D, 10)}
     ${blocoCriterio(p, "F", n.F, 10)}
     <div class="crit"><h4>População por setor censitário</h4><span>${fmt(p.pop)} pessoas</span></div>${tabelaSetores(p)}
     <div class="crit"><h4>Perfil de altitude</h4><span></span></div>${perfilSVG(p.ev.perfil) || '<p class="nota">Sem dado de altitude.</p>'}
-    <p class="nota">Traçado: ${esc(p.ev.fonte_tracado)} (${fmt(p.ev.trechos)} trechos). Corrija as notas acima após a vistoria de campo.</p>`;
+    <p class="nota">Traçado: ${esc(p.ev.fonte_tracado)} (${fmt(p.ev.trechos)} ${p.ev.trechos === 1 ? "trecho" : "trechos"}). Corrija as notas acima após a vistoria de campo.</p></div>`;
+}
+
+function subAbas(lista) {
+  return `<div class="subabas" role="tablist">${lista.map(([k, r]) => `<button role="tab" data-sub="${k}" aria-selected="${subFicha === k}">${r}</button>`).join("")}</div>`;
+}
+
+const ESCALA = ["n_pop", "n_sub", "dif.relevo", "dif.terreno", "dif.oae"];
+function ipCom(v, chave, val) { // índice da via se um item tivesse outro valor
+  const antes = ajustes[v.p.id];
+  ajustes[v.p.id] = { ...(antes || {}), [chave]: val };
+  const ip = notas(v.p).ip;
+  if (antes) ajustes[v.p.id] = antes; else delete ajustes[v.p.id];
+  return ip;
+}
+const posicaoCom = (v, ip) => 1 + ordem.filter((x) => x !== v && x.n.ip > ip).length;
+// texto da diferença entre duas posições vizinhas: onde esta ganha e onde perde
+function compara(n, o, partes, det, desempate) {
+  const d = Math.abs(o.n.ip - n.ip) * 100;
+  if (d < 0.005) return `Mesmo índice; a ordem vem de ${desempate}.`;
+  const dif = Object.keys(partes).map((c) => [c, n[c] - o.n[c]]);
+  const ganha = dif.filter((x) => x[1] > 1e-6).sort((a, b) => b[1] - a[1])[0], perde = dif.filter((x) => x[1] < -1e-6).sort((a, b) => a[1] - b[1])[0];
+  return `Diferença de ${fmt(d, d < 0.1 ? 2 : 1)} ponto.${ganha ? ` Esta leva vantagem em ${partes[ganha[0]]} (${det(ganha[0])})` : ""}${
+    perde ? `${ganha ? " e" : ""} fica atrás em ${partes[perde[0]]} (${det(perde[0])})` : ""}.`;
+}
+const lista = (xs) => xs.length <= 1 ? xs.join("") : xs.slice(0, -1).join("; ") + " e " + xs[xs.length - 1];
+
+function porQue(v) {
+  const p = v.p, n = v.n, N = ordem.length, k = 1 - RPESO;
+  const med = (f) => ordem.reduce((s, x) => s + f(x), 0) / N;
+  const com = (letra) => ITENS[letra].filter(([c]) => valor(p, c) > 0).map(([c, r]) => esc(r) + (ESCALA.includes(c) ? ` (nota ${valor(p, c)})` : ""));
+  const sem = (letra) => ITENS[letra].filter(([c]) => valor(p, c) === 0).map(([, r]) => esc(r));
+  const rel = (a, m) => a > m + 0.05 ? "acima da média" : a < m - 0.05 ? "abaixo da média" : "na média";
+  const empate = ordem.filter((x) => Math.abs(x.n.ip - n.ip) < 5e-5).length - 1;
+  const m = REGIC[p.cod_mun];
+  const partes = { pv: "vulnerabilidade", pd: "desenvolvimento", pf: "facilidade de execução", pr: "importância REGIC do município" };
+  const det = (c, o) => ({ pv: `V ${fmt(n.V)} contra ${fmt(o.n.V)}`, pd: `D ${fmt(n.D, 1)} contra ${fmt(o.n.D, 1)}`,
+    pf: `F ${fmt(n.F)} contra ${fmt(o.n.F)}, onde menos é melhor`, pr: `REGIC ${fmt(n.R, 2)} contra ${fmt(o.n.R, 2)}` }[c]);
+  const vizinho = (o, acima) => o ? `<li>${acima ? "Logo acima" : "Logo abaixo"}: <b>${esc(o.p.nome)}</b> (${o.pos}º, ${esc(o.p.municipio)}, índice ${fmt(o.n.ip * 100, 1)}).
+    ${compara(n, o, partes, (c) => det(c, o), "a população do entorno")}</li>` : "";
+  const sens = ITENS.V.concat(ITENS.D, ITENS.F).filter(([, , , est]) => est).map(([c, r, escala]) => {
+    const atual = valor(p, c), alt = atual > escala[0] ? escala[0] : escala[escala.length - 1], nova = posicaoCom(v, ipCom(v, c, alt));
+    return nova === v.pos ? "" : `<li>Se a vistoria indicar “${esc(r)}” = ${alt} (hoje ${atual}), a via vai para o <b>${nova}º</b> lugar.</li>`;
+  }).filter(Boolean);
+  return `<div class="porque">
+    <p><b>${esc(p.nome)}</b> ficou em <b>${v.pos}º de ${fmt(N)}</b>, com índice ${fmt(n.ip * 100, 1)} de 100. Está à frente de ${fmt(N - v.pos)} vias (${fmt(100 * (N - v.pos) / N)} % do total).
+    ${empate > 0 ? `Tem o mesmo índice que ${empate === 1 ? "outra via" : `outras ${fmt(empate)} vias`}; no empate passa à frente quem tem mais gente no entorno de 2 km (aqui, ${fmt(p.pop)} pessoas).` : ""}</p>
+    <h4>Vulnerabilidade de transporte: ${fmt(n.V)} de 5, ${rel(n.V, med((x) => x.n.V))} (${fmt(med((x) => x.n.V), 1)})</h4>
+    <p>É o critério de maior peso (${fmt(k * W.V * 100)} % do índice) e somou ${fmt(n.pv * 100, 1)} pontos.
+    ${com("V").length ? `Contaram ponto: ${lista(com("V"))}.` : "Nenhuma deficiência de transporte foi marcada."}
+    ${sem("V").length ? ` Não contaram: ${lista(sem("V"))}.` : ""}</p>
+    <h4>Desenvolvimento local: ${fmt(n.D, 1)} de 10, ${rel(n.D, med((x) => x.n.D))} (${fmt(med((x) => x.n.D), 1)})</h4>
+    <p>Somou ${fmt(n.pd * 100, 1)} pontos (peso ${fmt(k * W.D * 100)} %). Uso do solo ${fmt(n.uso)} de 5${n.uso ? `: ${lista(com("D").filter((t) => !t.startsWith("Nota")))}` : ""}.
+    Ocupação ${fmt(n.ocup, 1)} de 5: ${fmt(p.pop)} pessoas a até 2 km (nota ${valor(p, "n_pop")}) e ${fmt(p.juncoes)} ${p.juncoes === 1 ? "entroncamento" : "entroncamentos"} (nota ${valor(p, "n_sub")}).</p>
+    <h4>Dificuldade de projeto e execução: ${fmt(n.F)} de 10, ${rel(n.F, med((x) => x.n.F))} (${fmt(med((x) => x.n.F), 1)})</h4>
+    <p>Quanto mais difícil, menor a prioridade. A facilidade somou ${fmt(n.pf * 100, 1)} pontos (peso ${fmt(k * W.F * 100)} %).
+    ${com("F").length ? `Pesaram contra: ${lista(com("F"))}.` : "Nenhum fator de dificuldade foi marcado."}</p>
+    <h4>Município na rede urbana (REGIC 2018)</h4>
+    <p>${m ? `${esc(m.nome)} é <b>${esc(m.hierarquia)}</b> e se liga a ${esc(m.regiao_imediata)}. Importância REGIC ${fmt(n.R, 2)} de 1; com peso de ${fmt(RPESO * 100)} % isso somou ${fmt(n.pr * 100, 1)} pontos.` :
+      "Sem dado do REGIC para o município."}</p>
+    <h4>Comparação com as vizinhas no ranking</h4>
+    <ul>${vizinho(ordem[v.pos - 2], true)}${vizinho(ordem[v.pos], false)}</ul>
+    ${sens.length ? `<h4>O que pode mudar a posição</h4><p>Itens estimados a partir de bases públicas, a confirmar em campo:</p><ul>${sens.join("")}</ul>` : ""}
+  </div>`;
 }
 
 function selecionar(v, zoom = true) {
@@ -337,6 +406,8 @@ function montarPares() {
 }
 function desenharPesos() {
   const r = ahp();
+  $("#rpeso").value = Math.round(RPESO * 100);
+  $("#rpeso-val").textContent = `${fmt(RPESO * 100)} %`;
   $("#tab-pesos").innerHTML = ["V", "D", "F"].map((k) => `<tr><td>${NOMES[k]}</td><td>${fmt(r.w[k], 3)}</td></tr>`).join("");
   const ok = r.CR < 0.1;
   $("#cr").className = "cr" + (ok ? "" : " ruim");
@@ -375,6 +446,7 @@ function relatorioVia(v) {
     </tbody></table>
     ${dadosSeinfra(p)}
     <div class="rel-mapa" id="rel-mapa"></div>
+    <h2>Por que esta posição</h2>${porQue(v)}
     <h2>Vulnerabilidade de transporte — ${fmt(n.V)} de 5</h2>${tabela("V")}
     <h2>Desenvolvimento local — ${fmt(n.D, 1)} de 10</h2>${tabela("D")}
     <h2>Dificuldade de projeto e execução — ${fmt(n.F)} de 10</h2>${tabela("F")}
@@ -384,9 +456,10 @@ function relatorioVia(v) {
     <table><tbody>
       <tr><td>Pesos AHP (V / D / F)</td><td class="n">${fmt(W.V, 3)} / ${fmt(W.D, 3)} / ${fmt(W.F, 3)}</td></tr>
       <tr><td>Consistência (RC)</td><td class="n">${fmt(r.CR, 4)}</td></tr>
-      <tr><td>Vulnerabilidade: ${fmt(W.V, 3)} × ${fmt(n.V)}/5</td><td class="n">${fmt(n.pv, 4)}</td></tr>
-      <tr><td>Desenvolvimento: ${fmt(W.D, 3)} × ${fmt(n.D, 1)}/10</td><td class="n">${fmt(n.pd, 4)}</td></tr>
-      <tr><td>Facilidade: ${fmt(W.F, 3)} × (1 − ${fmt(n.F)}/10)</td><td class="n">${fmt(n.pf, 4)}</td></tr>
+      <tr><td>Vulnerabilidade: (1 − ${fmt(RPESO, 2)}) × ${fmt(W.V, 3)} × ${fmt(n.V)}/5</td><td class="n">${fmt(n.pv, 4)}</td></tr>
+      <tr><td>Desenvolvimento: (1 − ${fmt(RPESO, 2)}) × ${fmt(W.D, 3)} × ${fmt(n.D, 1)}/10</td><td class="n">${fmt(n.pd, 4)}</td></tr>
+      <tr><td>Facilidade: (1 − ${fmt(RPESO, 2)}) × ${fmt(W.F, 3)} × (1 − ${fmt(n.F)}/10)</td><td class="n">${fmt(n.pf, 4)}</td></tr>
+      <tr><td>REGIC: ${fmt(RPESO, 2)} × importância do município ${fmt(n.R, 3)}</td><td class="n">${fmt(n.pr, 4)}</td></tr>
       <tr><td><b>Índice de prioridade</b></td><td class="n"><b>${fmt(n.ip, 4)}</b></td></tr>
     </tbody></table>
     <p class="rel-rodape">Método: análise multicritério AHP (Saaty), conforme o artigo “Modelo de Priorização de Obras de Infraestrutura de Rodovias e Vicinais para o Estado do Amazonas com base em Análise Multicritério” (UNINORTE, 2023), com dificuldade tratada como critério de custo. Notas marcadas como estimativa devem ser confirmadas em vistoria de campo.<br>Fontes: ${FONTES}</p>`,
@@ -409,7 +482,7 @@ function relatorioGeral() {
       <td class="n">${fmt(v.n.V)}</td><td class="n">${fmt(v.n.D, 1)}</td><td class="n">${fmt(v.n.F)}</td><td class="n"><b>${fmt(v.n.ip * 100, 1)}</b></td></tr>`).join("")}
     </tbody></table>
     ${filtradas.length > 100 ? `<p class="nota">Mostrando as 100 primeiras de ${fmt(filtradas.length)}.</p>` : ""}
-    <p class="rel-rodape">V = vulnerabilidade de transporte (0–5); D = desenvolvimento local (0–10); F = dificuldade de projeto e execução (0–10, reduz a prioridade). Índice = w<sub>V</sub>·V/5 + w<sub>D</sub>·D/10 + w<sub>F</sub>·(1 − F/10), em escala 0–100.<br>Fontes: ${FONTES}</p>`,
+    <p class="rel-rodape">V = vulnerabilidade de transporte (0–5); D = desenvolvimento local (0–10); F = dificuldade de projeto e execução (0–10, reduz a prioridade); R = importância do município no REGIC 2018 (0–1). Índice = (1 − r)·[w<sub>V</sub>·V/5 + w<sub>D</sub>·D/10 + w<sub>F</sub>·(1 − F/10)] + r·R, com r = ${fmt(RPESO, 2)}, em escala 0–100.<br>Fontes: ${FONTES}</p>`,
   () => {
     const m = L.map("rel-mapa", { zoomControl: false });
     L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", { maxZoom: 17, attribution: atrib.topo }).addTo(m);
@@ -442,6 +515,16 @@ $("#pares").addEventListener("change", (e) => {
   pares[k] = Number(e.target.value);
   guardar("pares", pares);
   if (desenharPesos()) { recalcular(); desenharFicha(); }
+});
+$("#rpeso").addEventListener("input", (e) => {
+  RPESO = Number(e.target.value) / 100; guardar("rpeso", RPESO);
+  $("#rpeso-val").textContent = `${fmt(RPESO * 100)} %`; recalcular(); desenharFicha();
+});
+$("#ficha").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-sub]"); if (!b) return;
+  subFicha = b.dataset.sub;
+  b.parentElement.querySelectorAll("[data-sub]").forEach((x) => x.setAttribute("aria-selected", x === b));
+  document.querySelectorAll("#ficha [data-subpainel]").forEach((s) => (s.hidden = s.dataset.subpainel !== subFicha));
 });
 $("#btn-reset-pesos").addEventListener("click", () => { pares = { ...PADRAO }; guardar("pares", pares); montarPares(); recalcular(); desenharFicha(); });
 document.querySelectorAll("[name=fundo]").forEach((r) => r.addEventListener("change", () => {
@@ -478,4 +561,4 @@ $("#imp").addEventListener("change", async (e) => {
 $("#btn-limpar").addEventListener("click", () => { ajustes = {}; guardar("ajustes", ajustes); recalcular(); desenharFicha(); });
 window.addEventListener("hashchange", abrirPorHash);
 
-iniciar();
+const PRONTO = iniciar();
