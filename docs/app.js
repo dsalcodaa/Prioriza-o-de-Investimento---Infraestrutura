@@ -195,6 +195,10 @@ async function iniciar() {
       onEachFeature: (f, l) => l.bindPopup(popupLista(f.properties.tipo, f.properties)) }],
     portos: ["portos.geojson", { pointToLayer: iconeCirculo({ radius: 5, color: cor("--rio"), weight: 3, fillColor: "#fff", fillOpacity: 1 }),
       onEachFeature: (f, l) => l.bindPopup(popupLista(f.properties.tipo, f.properties)) }],
+    escolas: ["escolas.geojson", { pointToLayer: iconeCirculo({ radius: 3.5, color: "#fff", weight: 1, fillColor: cor("--p3"), fillOpacity: 1 }),
+      onEachFeature: (f, l) => l.bindPopup(popupLista("Escola", f.properties, `<br>${esc(f.properties.fonte)}`)) }],
+    saude: ["saude.geojson", { pointToLayer: iconeCirculo({ radius: 3.5, color: "#fff", weight: 1, fillColor: cor("--p1"), fillOpacity: 1 }),
+      onEachFeature: (f, l) => l.bindPopup(popupLista("Saúde", f.properties, `<br>${esc(f.properties.fonte)}`)) }],
     ucs: ["ucs.geojson", { style: { color: cor("--mata"), weight: 1, fillOpacity: 0.18 }, onEachFeature: (f, l) => l.bindPopup(popupLista("Unidade de conservação", f.properties)) }],
     tis: ["tis.geojson", { style: { color: cor("--p2"), weight: 1, fillColor: cor("--p2"), fillOpacity: 0.14 }, onEachFeature: (f, l) => l.bindPopup(popupLista("Terra indígena", f.properties)) }],
     sitios: ["sitios.geojson", { pointToLayer: iconeCirculo({ radius: 3.5, color: "#6b3fa0", weight: 0, fillOpacity: 0.85 }),
@@ -229,11 +233,13 @@ function evidencia(p, chave) {
   const e = p.ev, t = {
     "uso.comunidade": nomes(e.comunidades), "uso.assentamento": nomes(e.assentamentos), "uso.agricola": nomes(e.agricola),
     "uso.turismo": nomes(e.turismo), "uso.industrial": nomes(e.industrial),
-    n_pop: `${fmt(p.pop)} pessoas e ${fmt(p.dom)} domicílios estimados no entorno`,
+    n_pop: `${fmt(p.pop)} pessoas e ${fmt(p.dom)} domicílios estimados no entorno, somando ${fmt(e.n_setores || 0)} setores censitários: ` +
+      (e.setores || []).map((s) => `${s.setor} (${s.situacao}) ${fmt(s.pessoas_raio)} de ${fmt(s.pessoas)} pessoas`).join("; ") +
+      ((e.n_setores || 0) > (e.setores || []).length ? "; demais setores com menos pessoas" : ""),
     n_sub: `${fmt(p.juncoes)} entroncamentos com outras vias`,
     "vul.sem_intermodal": [nomes(e.aeroportos), nomes(e.portos)].filter(Boolean).join("; ") || "nenhum encontrado",
     "vul.sem_rota_alternativa": p.vul.sem_rota_alternativa ? "entroncamentos concentrados em um só ponto (via sem saída)" : "entroncamentos em pontos distintos",
-    "vul.trafegabilidade_ruim": `${fmt(e.frac_nao_pavimentada * 100)} % sem pavimento · superfícies no OSM: ${e.superficies.join(", ")}`,
+    "vul.trafegabilidade_ruim": `${fmt(e.frac_nao_pavimentada * 100)} % sem pavimento · revestimento: ${e.superficies.join(", ")}`,
     "vul.infra_acesso_deficiente": `${e.travessias} travessias de curso d'água (${e.igarapes ?? 0} igarapés menores, tratados como bueiro), ${e.sem_ponte} rios sem ponte mapeada, ${e.pontes_madeira} pontes de madeira${e.rios.length ? " · " + e.rios.join(", ") : ""}`,
     "vul.sem_servicos_publicos": nomes(e.servicos) || "nenhum encontrado",
     "dif.relevo": e.alt_min != null ? `média ${fmt(e.alt_media)} m (mín. ${fmt(e.alt_min)} m, máx. ${fmt(e.alt_max)} m)` : "sem dado",
@@ -242,6 +248,31 @@ function evidencia(p, chave) {
     "dif.oae": `${e.travessias - (e.igarapes ?? 0)} travessias de rio, ${e.sem_ponte} sem ponte mapeada (IBGE BC250 + OSM)`,
   }[chave];
   return t ? `<span class="ev">${esc(t)}</span>` : "";
+}
+
+function dadosSeinfra(p) {
+  const s = p.seinfra; if (!s) return "";
+  const linha = (r, v) => v != null && v !== "" ? `<tr><td>${r}</td><td class="n">${esc(v)}</td></tr>` : "";
+  return `<table class="itens"><tbody>
+    ${linha("Código SEINFRA", s.codigo)}${linha("Situação", s.situacao)}${linha("Revestimento", s.revestimento)}
+    ${linha("Rodovia ou estrada de acesso", s.acesso)}${linha("Ponto de referência", s.referencia)}
+    ${linha("Extensão no cadastro", s.extensao_km != null ? `${fmt(s.extensao_km, 2)} km` : null)}
+    ${linha("Custo estimado", s.custo_estimado ? s.custo_estimado.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : null)}
+  </tbody></table>`;
+}
+
+function tabelaSetores(p) {
+  const l = p.ev.setores || [];
+  if (!l.length) return '<p class="nota">Nenhum setor censitário com moradores no raio de 2 km.</p>';
+  const resto = (p.ev.n_setores || 0) - l.length;
+  return `<table class="itens setores"><thead><tr><th>Setor (Censo 2022)</th><th>Situação</th><th class="n">Pessoas no setor</th>
+    <th class="n">Domicílios no raio</th><th class="n">Pessoas no raio</th></tr></thead><tbody>
+    ${l.map((s) => `<tr><td>${esc(s.setor)}</td><td>${esc(s.situacao)}</td><td class="n">${fmt(s.pessoas)}</td>
+      <td class="n">${s.dom_cnefe_raio != null ? `${fmt(s.dom_cnefe_raio)} de ${fmt(s.dom_cnefe_setor)}` : "—"}</td>
+      <td class="n">${fmt(s.pessoas_raio)}</td></tr>`).join("")}
+    </tbody></table>
+    <p class="nota">Pessoas no raio = pessoas do setor × fração dos domicílios do setor (endereços do CNEFE 2022) a até 2 km da via.
+    Setor sem endereço no CNEFE usa a fração da área.${resto > 0 ? ` Mais ${fmt(resto)} setores com menos pessoas não listados.` : ""}</p>`;
 }
 
 function perfilSVG(alts) {
@@ -266,6 +297,7 @@ function desenharFicha() {
   $("#ficha-conteudo").innerHTML = `
     <h2 class="ficha-tit">${esc(p.nome)}</h2>
     <p class="ficha-sub">${esc(p.tipo)} · ${esc(p.municipio)} (${fmt(p.pop_mun || 0)} hab. em 2022) · ${fmt(p.km, 1)} km</p>
+    ${dadosSeinfra(p)}
     <div class="placar"><span class="grande">${v.pos}º</span><span class="rot">de ${fmt(ordem.length)} vias no ranking geral</span>
       <span class="grande">${fmt(n.ip * 100, 1)}</span><span class="rot">índice de prioridade (0–100)<br>vulnerabilidade ${fmt(n.pv * 100, 1)} + desenvolvimento ${fmt(n.pd * 100, 1)} + facilidade ${fmt(n.pf * 100, 1)}</span></div>
     <div class="acoes"><button class="primario" id="btn-rel">Relatório desta via</button><button id="btn-zoom">Aproximar no mapa</button>
@@ -273,8 +305,9 @@ function desenharFicha() {
     ${blocoCriterio(p, "V", n.V, 5)}
     ${blocoCriterio(p, "D", n.D, 10)}
     ${blocoCriterio(p, "F", n.F, 10)}
+    <div class="crit"><h4>População por setor censitário</h4><span>${fmt(p.pop)} pessoas</span></div>${tabelaSetores(p)}
     <div class="crit"><h4>Perfil de altitude</h4><span></span></div>${perfilSVG(p.ev.perfil) || '<p class="nota">Sem dado de altitude.</p>'}
-    <p class="nota">Fonte das geometrias: OpenStreetMap (${p.ev.osm_ways.length} trechos). Corrija as notas acima após a vistoria de campo.</p>`;
+    <p class="nota">Traçado: ${esc(p.ev.fonte_tracado)} (${fmt(p.ev.trechos)} trechos). Corrija as notas acima após a vistoria de campo.</p>`;
 }
 
 function selecionar(v, zoom = true) {
@@ -312,9 +345,12 @@ function desenharPesos() {
 }
 
 /* ---------- relatórios ---------- */
-const FONTES = `IBGE — malha municipal, população 2022 (SIDRA 4709), setores censitários e agregados por setor do Censo 2022;
+const FONTES = `SEINFRA-AM — traçado dos ramais e vicinais (REV06, 16/05/2025);
+  IBGE — malha municipal, população 2022 (SIDRA 4709), setores censitários e agregados por setor do Censo 2022,
+  CNEFE 2022 (domicílios, escolas, saúde e estabelecimentos agropecuários), BC250 (hidrografia e pontes);
+  Ministério da Saúde — CNES (estabelecimentos de saúde);
   INPE TerraBrasilis — unidades de conservação e terras indígenas da Amazônia Legal; IPHAN — sítios arqueológicos (SICG);
-  OpenStreetMap — ramais, rodovias estaduais, aeroportos, portos, serviços públicos, comunidades, uso do solo e hidrografia;
+  OpenStreetMap — rodovias estaduais, aeroportos, portos, comunidades e uso do solo;
   OpenTopoData / NASA SRTM 90 m — altitude.`;
 
 function abrirRelatorio(html, depois) {
@@ -337,10 +373,12 @@ function relatorioVia(v) {
       <tr><td>População do município (Censo 2022)</td><td class="n">${fmt(p.pop_mun || 0)}</td></tr>
       <tr><td>População estimada no entorno de 2 km (setores do Censo 2022)</td><td class="n">${fmt(p.pop)}</td></tr>
     </tbody></table>
+    ${dadosSeinfra(p)}
     <div class="rel-mapa" id="rel-mapa"></div>
     <h2>Vulnerabilidade de transporte — ${fmt(n.V)} de 5</h2>${tabela("V")}
     <h2>Desenvolvimento local — ${fmt(n.D, 1)} de 10</h2>${tabela("D")}
     <h2>Dificuldade de projeto e execução — ${fmt(n.F)} de 10</h2>${tabela("F")}
+    <h2>População por setor censitário (raio de 2 km)</h2>${tabelaSetores(p)}
     <h2>Perfil de altitude</h2>${perfilSVG(p.ev.perfil)}
     <h2>Memória de cálculo</h2>
     <table><tbody>

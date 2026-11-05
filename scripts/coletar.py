@@ -109,6 +109,49 @@ if not ja_tem("ibge_setores_pop_AM.json"):
     salvar("ibge_setores_pop_AM.json", pop)
     print("ok ibge_setores_pop_AM.json", len(pop), "setores")
 
+if not ja_tem("ibge_cnefe_AM.json"):
+    # CNEFE 2022: endereços do Censo com coordenadas. Domicílios viram contagem por setor numa grade de ~220 m
+    # (para ratear a população do setor pelo que cai no raio); escolas, saúde e agropecuária viram pontos.
+    import zipfile, io, csv
+    zpath = RAW / "cnefe_13_AM.zip"
+    if not zpath.exists():
+        zpath.write_bytes(get("https://ftp.ibge.gov.br/Cadastro_Nacional_de_Enderecos_para_Fins_Estatisticos/"
+                              "Censo_Demografico_2022/Arquivos_CNEFE/CSV/UF/13_AM.zip").content)
+    z = zipfile.ZipFile(zpath)
+    rd = csv.DictReader(io.TextIOWrapper(z.open(z.namelist()[0]), encoding="utf-8"), delimiter=";")
+    dom, esc, sau, agro = {}, [], [], []
+    for l in rd:
+        try:
+            lat, lon = float(l["LATITUDE"]), float(l["LONGITUDE"])
+        except ValueError:
+            continue
+        esp, setor = l["COD_ESPECIE"], l["COD_SETOR"][:15]  # CNEFE traz sufixo (P) no código do setor
+        if esp == "1":
+            cel = f"{math.floor(lon / 0.002)},{math.floor(lat / 0.002)}"
+            dom.setdefault(setor, {})
+            dom[setor][cel] = dom[setor].get(cel, 0) + 1
+        elif esp in ("4", "5"):
+            (esc if esp == "4" else sau).append([round(lat, 6), round(lon, 6), l["DSC_ESTABELECIMENTO"] or "(sem nome)", l["DSC_LOCALIDADE"]])
+        elif esp == "3":
+            agro.append([round(lat, 5), round(lon, 5)])
+    salvar("ibge_cnefe_AM.json", {"celula_graus": 0.002, "dom": dom, "escolas": esc, "saude": sau, "agro": agro})
+    print("ok ibge_cnefe_AM.json", len(dom), "setores com domicílios;", len(esc), "escolas;", len(sau), "saúde;", len(agro), "agropecuários")
+
+if not ja_tem("cnes_AM.json"):
+    # CNES (Ministério da Saúde): estabelecimentos de saúde do AM com coordenadas; a API devolve 20 por página
+    lista, off = [], 0
+    while True:
+        r = get("https://apidadosabertos.saude.gov.br/cnes/estabelecimentos", params={"codigo_uf": 13, "limit": 20, "offset": off})
+        pag = js(r).get("estabelecimentos", [])
+        lista += [{k: e.get(k) for k in ("codigo_cnes", "nome_fantasia", "codigo_tipo_unidade", "codigo_municipio",
+                                         "latitude_estabelecimento_decimo_grau", "longitude_estabelecimento_decimo_grau")} for e in pag]
+        if len(pag) < 20:
+            break
+        off += 20
+        time.sleep(0.2)
+    salvar("cnes_AM.json", lista)
+    print("ok cnes_AM.json", len(lista), "estabelecimentos")
+
 # ---------- INPE TerraBrasilis ----------
 TB = "https://terrabrasilis.dpi.inpe.br/geoserver/ows"
 wfs("inpe_ucs.geojson", TB, "prodes-legal-amz:conservation_units_legal_amazon")

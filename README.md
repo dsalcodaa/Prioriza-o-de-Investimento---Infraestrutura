@@ -2,7 +2,7 @@
 
 Mapa georreferenciado que ordena **ramais e rodovias estaduais** do Amazonas pelo método AHP do artigo
 *Modelo de Priorização de Obras de Infraestrutura de Rodovias e Vicinais para o Estado do Amazonas com base em Análise Multicritério* (UNINORTE, 2023),
-cruzando dados do IBGE, INPE, IPHAN, OpenStreetMap e relevo SRTM. Gera relatório imprimível por via e do ranking geral.
+cruzando o traçado de ramais da SEINFRA-AM (REV06, 16/05/2025) com dados do IBGE, CNES, INPE, IPHAN, OpenStreetMap e relevo SRTM. Gera relatório imprimível por via e do ranking geral.
 
 ## Estrutura
 
@@ -29,10 +29,13 @@ Para testar localmente: `python -m http.server 8000 -d docs` e abrir http://loca
 | Dado | Fonte | Uso no modelo |
 |---|---|---|
 | Municípios, malha e população 2022 | IBGE (API Localidades, Malhas v3, SIDRA tabela 4709) | Município da via, contexto |
-| Setores censitários + agregados por setor (Censo 2022) | IBGE geoftp / ftp | Nível de ocupação: pessoas e domicílios num raio de 2 km |
+| Traçado dos ramais e vicinais (907 trechos) | SEINFRA-AM, shapefile REV06 de 16/05/2025 | Alternativas (ramais), revestimento, situação, custo estimado |
+| Setores censitários + agregados por setor (Censo 2022) | IBGE geoftp / ftp | Nível de ocupação: pessoas e domicílios num raio de 2 km, detalhado por setor |
+| CNEFE 2022 (endereços) | IBGE ftp | Rateio da população do setor pelos domicílios dentro do raio; escolas; saúde; estabelecimentos agropecuários |
+| Estabelecimentos de saúde | Ministério da Saúde, API CNES (`apidadosabertos.saude.gov.br/cnes`) | Vulnerabilidade: sem saúde a até 2 km |
 | Unidades de conservação e terras indígenas | INPE TerraBrasilis (WFS `prodes-legal-amz`) | Dificuldade: UC e TI |
 | Sítios arqueológicos | IPHAN geoserver (WFS `SICG:sitios`) | Dificuldade: sítio a até 1 km |
-| Ramais, rodovias AM-xxx, aeroportos, portos/flutuantes, escolas e saúde, comunidades, uso do solo, pontes | OpenStreetMap (Overpass) | Alternativas, vulnerabilidade, uso do solo, entroncamentos, OAE |
+| Rodovias AM-xxx, aeroportos, portos/flutuantes, comunidades, uso do solo, pontes, vias que cruzam | OpenStreetMap (Overpass) | Alternativas (rodovias), vulnerabilidade, uso do solo, entroncamentos, OAE |
 | Altitude | OpenTopoData — SRTM 90 m | Dificuldade: relevo; perfil de altitude |
 | Drenagem e pontes (BC250 2025) | IBGE geoservicos (WFS `CCAR:BC250_2025_*`) | Travessias de rio, pontes, OAE, várzea (estimada) |
 
@@ -46,7 +49,8 @@ Para testar localmente: `python -m http.server 8000 -d docs` e abrir http://loca
 
 ## Limitações conhecidas
 
-- Só entram ramais **com nome** no OpenStreetMap ("Ramal…", "Estrada…", "Vicinal…"). Ramais sem nome no OSM não aparecem.
+- Ramais vêm do shapefile da SEINFRA (cada trecho do cadastro é uma alternativa). Entroncamentos = outras vias (SEINFRA ou OSM) que encostam no traçado a até 30 m.
+- Catálogo de Escolas do INEP: a página bloqueia acesso automatizado. Escolas vêm do CNEFE 2022 (IBGE). Para usar o INEP, baixe o CSV do catálogo e coloque em `data/raw/`.
 - INCRA estava fora do ar na coleta: assentamento vem só de nomes no OSM. Confirmar em campo.
 - Terreno: o BC250 não traz áreas de inundação no AM; várzea é estimada (altitude média ≤ 30 m a até 2 km de rio) e igapó só por vistoria. Igarapés menores contam como bueiro.
 - Agricultura, pontes e pavimento dependem do que está mapeado no OSM/BC250. São marcados como **estimativa** e podem ser ajustados na ficha de cada via (ajustes ficam no navegador e podem ser exportados/importados em JSON).

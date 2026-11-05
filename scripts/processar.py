@@ -12,6 +12,8 @@ import requests, shapefile
 from shapely.geometry import shape, LineString, MultiLineString, Point, mapping
 from shapely.ops import transform, unary_union, linemerge
 from shapely.strtree import STRtree
+from shapely.prepared import prep
+from shapely.ops import nearest_points
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 RAW, OUT = RAIZ / "data" / "raw", RAIZ / "docs" / "data"
@@ -93,20 +95,37 @@ for sr in sf.iterShapeRecords():
     if p and p[0] > 0:
         g = proj(shape(sr.shape.__geo_interface__)).buffer(0)
         if g.area > 0:
-            setores.append((g, p[0], p[1]))
-arv_set = STRtree([g for g, _, _ in setores])
+            setores.append((g, p[0], p[1], sr.record["CD_SETOR"], sr.record["SITUACAO"]))
+arv_set = STRtree([s_[0] for s_ in setores])
+cnefe = ler("ibge_cnefe_AM.json")
+CEL, dom_cel = cnefe["celula_graus"], cnefe["dom"]
+tot_dom = {k: sum(v.values()) for k, v in dom_cel.items()}
 print("  setores com população:", len(setores))
 
 
 def populacao(geom_m, raio=2000):
-    """Pessoas e domicílios do Censo 2022 dentro do buffer, rateados pela área do setor."""
+    """Pessoas e domicílios do Censo 2022 no raio. Cada setor entra com a fração dos seus domicílios (CNEFE)
+    que cai dentro do raio; sem endereços no CNEFE, usa a fração da área do setor."""
     buf = geom_m.buffer(raio)
+    dentro_buf = prep(desproj(buf))
     pes = dom = 0.0
+    detalhe = []
     for i in arv_set.query(buf):
-        g, p, d = setores[i]
-        f = g.intersection(buf).area / g.area
+        g, p, d, cd, sit = setores[i]
+        cels = dom_cel.get(cd)
+        if cels and tot_dom.get(cd):
+            n_dentro = sum(n for k, n in cels.items()
+                           if dentro_buf.contains(Point((int(k.split(",")[0]) + .5) * CEL, (int(k.split(",")[1]) + .5) * CEL)))
+            f, metodo = n_dentro / tot_dom[cd], "domicílios CNEFE"
+        else:
+            n_dentro, f, metodo = None, g.intersection(buf).area / g.area, "área do setor"
+        if f <= 0:
+            continue
         pes, dom = pes + p * f, dom + d * f
-    return round(pes), round(dom)
+        detalhe.append({"setor": cd, "situacao": sit, "pessoas": int(p), "domicilios": int(d), "dom_cnefe_raio": n_dentro,
+                        "dom_cnefe_setor": tot_dom.get(cd), "fracao": round(f, 4), "pessoas_raio": round(p * f), "metodo": metodo})
+    detalhe.sort(key=lambda x: -x["pessoas_raio"])
+    return round(pes), round(dom), detalhe
 
 
 # ---------------- camadas ambientais / patrimônio ----------------
@@ -155,9 +174,17 @@ def tipo_porto(t):
         return "Porto"
     return "Píer / atracadouro"
 portos = pontos_osm("osm_portos.json", tipo_porto)
-SAUDE = {"hospital", "clinic", "doctors"}
-servicos = pontos_osm("osm_servicos.json", lambda t: "Escola" if t.get("amenity") == "school" else
-                      "Saúde" if t.get("amenity") in SAUDE or t.get("healthcare") else "Serviço público")
+escolas = [(Point(lon, lat), {"nome": n.title(), "tipo": "Escola", "fonte": "IBGE CNEFE 2022", "local": loc.title()})
+           for lat, lon, n, loc in cnefe["escolas"]]
+cnes = [(Point(float(e["longitude_estabelecimento_decimo_grau"]), float(e["latitude_estabelecimento_decimo_grau"])),
+         {"nome": (e["nome_fantasia"] or "(sem nome)").title(), "tipo": "Saúde", "fonte": f'CNES {e["codigo_cnes"]}'})
+        for e in ler("cnes_AM.json") if e.get("latitude_estabelecimento_decimo_grau") and e.get("longitude_estabelecimento_decimo_grau")]
+cnes = [(p, a) for p, a in cnes if estado.contains(p)]
+saude_cnefe = [(Point(lon, lat), {"nome": n.title(), "tipo": "Saúde", "fonte": "IBGE CNEFE 2022", "local": loc.title()})
+               for lat, lon, n, loc in cnefe["saude"]]
+servicos = escolas + cnes + saude_cnefe
+agro_cnefe = [(Point(lon, lat), {"nome": "Estabelecimento agropecuário", "tipo": "agricola", "fonte": "IBGE CNEFE 2022"})
+              for lat, lon in cnefe["agro"]]
 lugares = pontos_osm("osm_lugares.json", lambda t: t.get("place"))
 def tipo_uso(t):
     if t.get("tourism"):
@@ -168,9 +195,10 @@ def tipo_uso(t):
 usos = pontos_osm("osm_usosolo.json", tipo_uso)
 assent = [x for x in lugares + usos if any(k in x[1]["nome"].lower() for k in ("assentamento", "p.a.", "pa ", "pds ", "paex"))]
 I = {k: Pontos(v) for k, v in dict(aero=aeroportos, porto=portos, serv=servicos, lugar=lugares, assent=assent,
-                                    agric=[u for u in usos if u[1]["tipo"] == "agricola"],
+                                    agric=[u for u in usos if u[1]["tipo"] == "agricola"] + agro_cnefe,
                                     tur=[u for u in usos if u[1]["tipo"] == "turismo"],
                                     ind=[u for u in usos if u[1]["tipo"] == "industrial"]).items()}
+print("  escolas", len(escolas), "saúde CNES", len(cnes), "saúde CNEFE", len(saude_cnefe), "agropecuários", len(agro_cnefe))
 print("  aeroportos", len(aeroportos), "portos", len(portos), "serviços", len(servicos), "lugares", len(lugares), "assentamentos", len(assent))
 
 # ---------------- água, várzea e pontes: IBGE BC250 + pontes do OSM ----------------
@@ -191,17 +219,7 @@ pontes = [proj(l) for e in con if e.get("tags", {}).get("bridge") and (l := linh
 pontes += [proj(shape(f["geometry"])).buffer(30) for f in bc["ponte_l"] + bc["ponte_p"]]
 arv_ponte = STRtree(pontes) if pontes else None
 print("  trechos de drenagem", len(rios), "pontes", len(pontes))
-nos_da_via = {e["id"]: e.get("nodes", []) for e in con}
-vias_do_no = defaultdict(set)
-for e in con:
-    for n in e.get("nodes", []):
-        vias_do_no[n].add(e["id"])
-coord_no = {}
-for e in con:
-    for n, p in zip(e.get("nodes", []), e.get("geometry", [])):
-        if p:
-            coord_no[n] = (p["lon"], p["lat"])
-
+outras = {f"osm-{e['id']}": proj(l) for e in con if (l := linha_osm(e))}
 # ---------------- montar alternativas (vias) ----------------
 print("vias…")
 EXCLUI = {"path", "footway", "cycleway", "steps", "pedestrian", "bridleway", "construction", "proposed"}
@@ -209,7 +227,7 @@ PAVIMENTO = {"asphalt", "paved", "concrete", "paving_stones", "chipseal", "concr
 PAV_PADRAO = {"motorway", "trunk", "primary", "secondary", "motorway_link", "trunk_link", "primary_link"}
 import re
 grupos = defaultdict(dict)
-for nome_arq, tipo in (("osm_rodovias.json", "Rodovia estadual"), ("osm_ramais.json", "Ramal / estrada vicinal")):
+for nome_arq, tipo in (("osm_rodovias.json", "Rodovia estadual"),):
     for e in ler(nome_arq)["elements"]:
         t = e["tags"]
         if t.get("highway") in EXCLUI or not (l := linha_osm(e)):
@@ -223,7 +241,7 @@ for nome_arq, tipo in (("osm_rodovias.json", "Rodovia estadual"), ("osm_ramais.j
             chave = (tipo, t["name"].strip())
         else:
             continue
-        grupos[chave][e["id"]] = (l, t)
+        grupos[chave][f'osm-{e["id"]}'] = (l, t)
 
 alternativas = []
 for (tipo, nome), ways in grupos.items():
@@ -246,7 +264,44 @@ for (tipo, nome), ways in grupos.items():
         comp[raiz(i)].append(i)
     for membros in comp.values():
         alternativas.append((tipo, nome, {i: ways[i] for i in membros}))
-print("  alternativas brutas:", len(alternativas))
+
+SHP_RAMAIS = RAIZ.parent / "3-RAMAIS" / "1-TRAÇADO RAMAIS" / "RAMAIS - TRAÇADO REV06 - 16-05-2025" / "VICINAIS-RAMAIS-ESTRADAS - SEINFRA 2025.shp"
+sf_r = shapefile.Reader(str(SHP_RAMAIS), encoding="utf-8")
+nomes_campos = [re.sub(r"[^A-Za-z/ ]", "", f[0]) for f in sf_r.fields[1:]]  # nomes vêm truncados no meio do acento
+def campo(prefixo):
+    return next(i for i, n in enumerate(nomes_campos) if n.startswith(prefixo))
+C = {k: campo(v) for k, v in dict(cod="CDIGO", num="Nmero", desc="Descri", acesso="Rodovia/Es", ref="Ponto de r", mun="Munic",
+                                   ext="Extens", rev="Revestimen", sit="Situa", custo="Custo Esti").items()}
+assert C["num"] == C["cod"] + 1, nomes_campos[:5]
+MINUSC = {"de", "do", "da", "dos", "das", "e", "a", "o"}
+def titulo(t):
+    # siglas de rodovia (AM-352, BR-174) e abreviações com ponto (S.I) ficam em maiúsculas
+    return " ".join(w if re.search(r"\d|\.", w) and w.isupper() else w.lower() if (k and w.lower() in MINUSC) else w.capitalize()
+                    for k, w in enumerate(t.split()))
+def numero(v):
+    try:
+        return float(str(v).replace(".", "").replace(",", ".")) if "," in str(v) else float(v)
+    except (TypeError, ValueError):
+        return None
+for k, sr in enumerate(sf_r.iterShapeRecords()):
+    partes = [[(x, y) for x, y, *_ in sr.shape.points[a:b]] for a, b in zip(sr.shape.parts, list(sr.shape.parts[1:]) + [len(sr.shape.points)])]
+    linhas = [LineString(p) for p in partes if len(p) >= 2]
+    if not linhas:
+        continue
+    r = sr.record
+    rev = str(r[C["rev"]]).strip().upper()
+    tags = {"surface": "paved" if rev.startswith("PAVIMENT") else "unpaved", "highway": "unclassified"}
+    ways = {f"seinfra-{k}-{j}": (l, tags) for j, l in enumerate(linhas)}
+    for wid, (l, _) in ways.items():
+        outras[wid] = proj(l)
+    info = {"codigo": f'{r[C["cod"]]}-{r[C["num"]]}', "acesso": r[C["acesso"]], "referencia": r[C["ref"]],
+            "municipio_seinfra": r[C["mun"]], "extensao_km": numero(r[C["ext"]]), "revestimento": rev.title(),
+            "situacao": str(r[C["sit"]]).strip().title(), "custo_estimado": numero(r[C["custo"]])}
+    alternativas.append(("Ramal / estrada vicinal", titulo(str(r[C["desc"]]).strip()), ways, info))
+alternativas = [a if len(a) == 4 else (*a, None) for a in alternativas]
+print("  alternativas:", len(alternativas), "(ramais SEINFRA:", sum(1 for a in alternativas if a[3]), ")")
+arv_outras_ids = list(outras)
+arv_outras = STRtree([outras[i] for i in arv_outras_ids])
 
 # ---------------- elevação (OpenTopoData SRTM 90 m) ----------------
 cache_path = RAW / "elevacao_cache.json"
@@ -297,25 +352,40 @@ def lista(itens, k=6):
     return out[:k]
 
 feats, prontas = [], []
-for tipo, nome, ways in alternativas:
+for tipo, nome, ways, info in alternativas:
     geom_ll = linemerge(MultiLineString([l for l, _ in ways.values()]))
     gm = proj(geom_ll)
     km = gm.length / 1000
-    if km < 1:  # trechos menores são em geral fragmentos de ruas urbanas
+    if km < 1 and not info:  # trechos OSM menores são em geral fragmentos de ruas urbanas; ramais SEINFRA entram todos
         continue
-    prontas.append((tipo, nome, ways, geom_ll, gm, km))
+    prontas.append((tipo, nome, ways, geom_ll, gm, km, info))
 
 todos_pts = []
-for *_, geom_ll, gm, km in prontas:
+for *_, geom_ll, gm, km, info in prontas:
     todos_pts += amostras(geom_ll, int(min(40, max(5, km))))
 print("elevação: pontos a consultar", len([p for p in set(todos_pts) if f"{p[0]},{p[1]}" not in elev]))
 busca_elevacao(todos_pts)
 
 contagem_id = defaultdict(int)
-for tipo, nome, ways, geom_ll, gm, km in prontas:
+def entroncamentos(gm, proprias):
+    """Pontos onde outras vias encostam (até 30 m) no traçado. Via que corre junto por mais de 300 m é a mesma estrada."""
+    pts = []
+    for j in arv_outras.query(gm.buffer(30)):
+        oid = arv_outras_ids[j]
+        if oid in proprias:
+            continue
+        c = outras[oid]
+        if c.distance(gm) > 30 or c.intersection(gm.buffer(30)).length > 300:
+            continue
+        p = nearest_points(gm, c)[0]
+        if all(p.distance(q) > 50 for q in pts):
+            pts.append(p)
+    return pts
+
+for tipo, nome, ways, geom_ll, gm, km, info in prontas:
     meio = geom_ll.interpolate(0.5, normalized=True)
     cod = municipio(meio)
-    base_id = re.sub(r"[^a-z0-9]+", "-", f"{nome}-{nomes_mun.get(cod, cod)}".lower()
+    base_id = info["codigo"].lower() if info else re.sub(r"[^a-z0-9]+", "-", f"{nome}-{nomes_mun.get(cod, cod)}".lower()
                      .translate(str.maketrans("áàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ", "aaaaeeiooouc" * 2))).strip("-")
     contagem_id[base_id] += 1
     vid = base_id if contagem_id[base_id] == 1 else f"{base_id}-{contagem_id[base_id]}"
@@ -327,10 +397,10 @@ for tipo, nome, ways, geom_ll, gm, km in prontas:
     uso = {"comunidade": int(bool(com)), "assentamento": int(bool(ass)), "agricola": int(bool(agr)),
            "turismo": int(bool(tur)), "industrial": int(bool(ind))}
     # --- Nível de ocupação
-    pes, dom = populacao(gm)
+    pes, dom, det_setores = populacao(gm)
     own = set(ways)
-    juncoes = {n for w in own for n in nos_da_via.get(w, []) if vias_do_no[n] - own}
-    pj = [proj(Point(coord_no[n])) for n in juncoes if n in coord_no]
+    pj = entroncamentos(gm, own)
+    juncoes = pj
     espalhamento = max((a.distance(b) for a in pj for b in pj), default=0)
     n_pop, n_sub = nota_pop(pes), nota_sub(len(juncoes))
     # --- C2 Vulnerabilidade (1 = deficiência presente)
@@ -378,7 +448,7 @@ for tipo, nome, ways, geom_ll, gm, km in prontas:
            "ti": int(bool(ti_l)), "oae": oae}
 
     props = {
-        "id": vid, "tipo": tipo, "nome": nome, "municipio": nomes_mun.get(cod, cod), "cod_mun": cod,
+        "id": vid, "tipo": tipo, "nome": nome, "seinfra": info, "municipio": nomes_mun.get(cod, cod), "cod_mun": cod,
         "pop_mun": pop_mun.get(cod), "km": round(km, 2),
         "uso": uso, "pop": pes, "dom": dom, "juncoes": len(juncoes), "n_pop": n_pop, "n_sub": n_sub,
         "vul": vul, "dif": dif,
@@ -389,8 +459,9 @@ for tipo, nome, ways, geom_ll, gm, km in prontas:
             "frac_nao_pavimentada": round(frac_unp, 2), "travessias": travessias, "igarapes": igarapes, "sem_ponte": sem_ponte,
             "pontes_madeira": madeira, "rios": sorted(rios_cruzados)[:8], "alagados": len(alag),
             "alt_media": round(h_med, 1), "alt_min": min(alts, default=None), "alt_max": max(alts, default=None),
-            "perfil": alts, "superficies": sorted({t.get("surface", "não informado") for _, t in ways.values()}),
-            "osm_ways": sorted(own)[:50],
+            "perfil": alts, "superficies": [info["revestimento"]] if info else sorted({t.get("surface", "não informado") for _, t in ways.values()}),
+            "setores": det_setores[:25], "n_setores": len(det_setores),
+            "trechos": len(own), "fonte_tracado": "SEINFRA-AM 2025 (REV06)" if info else "OpenStreetMap",
         },
     }
     feats.append({"type": "Feature", "geometry": arred(geom_ll.simplify(0.0001)), "properties": props})
@@ -417,6 +488,8 @@ def fc_pontos(itens):
     return {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": arred(p), "properties": a} for p, a in itens]}
 salvar("aeroportos.geojson", fc_pontos(aeroportos))
 salvar("portos.geojson", fc_pontos(portos))
+salvar("escolas.geojson", fc_pontos(escolas))
+salvar("saude.geojson", fc_pontos(cnes + saude_cnefe))
 salvar("sitios.geojson", fc_pontos([(p, {"nome": a.get("identificacao_bem"), "codigo": a.get("co_iphan"), "classe": a.get("ds_classificacao")}) for p, a in sitios]))
 def fc_poli(lista_, campos):
     return {"type": "FeatureCollection", "features": [
@@ -429,5 +502,5 @@ salvar("municipios.geojson", {"type": "FeatureCollection", "features": [
     for g, c in muns]})
 salvar("meta.json", {"gerado_em": time.strftime("%d/%m/%Y %H:%M"), "n_vias": len(feats),
                      "n_aeroportos": len(aeroportos), "n_portos": len(portos), "n_sitios": len(sitios),
-                     "n_ucs": len(ucs), "n_tis": len(tis), "n_setores": len(setores)})
+                     "n_escolas": len(escolas), "n_saude": len(cnes) + len(saude_cnefe), "n_ucs": len(ucs), "n_tis": len(tis), "n_setores": len(setores)})
 print("pronto:", len(feats), "vias")

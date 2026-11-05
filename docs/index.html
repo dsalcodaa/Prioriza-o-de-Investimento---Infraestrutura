@@ -8,14 +8,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 <div id="app">
   <aside id="painel" aria-label="Painel de priorização">
     <header class="marca">
       <h1>Priorização de obras viárias <span>Amazonas</span></h1>
-      <p>Ramais e rodovias estaduais ordenados pelo método AHP (análise multicritério), com dados do IBGE, INPE, IPHAN, OpenStreetMap e relevo SRTM.</p>
+      <p>Ramais e rodovias estaduais ordenados pelo método AHP (análise multicritério), com traçado de ramais da SEINFRA-AM (2025) e dados do IBGE, CNES, INPE, IPHAN, OpenStreetMap e relevo SRTM.</p>
     </header>
     <nav class="abas" role="tablist">
       <button role="tab" aria-selected="true" data-aba="ranking">Ranking</button>
@@ -68,6 +68,8 @@
       <fieldset><legend>Camadas</legend>
         <label><input type="checkbox" data-camada="aeroportos" checked> <i class="sw sw-aero"></i> Aeroportos e pistas</label>
         <label><input type="checkbox" data-camada="portos" checked> <i class="sw sw-porto"></i> Portos e flutuantes</label>
+        <label><input type="checkbox" data-camada="escolas"> <i class="sw sw-escola"></i> Escolas (IBGE CNEFE)</label>
+        <label><input type="checkbox" data-camada="saude"> <i class="sw sw-saude"></i> Saúde (CNES + CNEFE)</label>
         <label><input type="checkbox" data-camada="ucs"> <i class="sw sw-uc"></i> Unidades de conservação (INPE)</label>
         <label><input type="checkbox" data-camada="tis"> <i class="sw sw-ti"></i> Terras indígenas (INPE)</label>
         <label><input type="checkbox" data-camada="sitios"> <i class="sw sw-sitio"></i> Sítios arqueológicos (IPHAN)</label>
@@ -86,9 +88,9 @@
         <p><b>Índice de prioridade</b> = w<sub>V</sub>·V/5 + w<sub>D</sub>·D/10 + w<sub>F</sub>·(1 − F/10)</p>
         <dl>
           <dt>V · Vulnerabilidade de transporte (0–5)</dt>
-          <dd>Um ponto por deficiência: sem porto ou aeroporto a até 10 km; sem rota alternativa; maior parte sem pavimento; travessia de rio (IBGE BC250) sem ponte mapeada ou ponte de madeira; sem escola ou unidade de saúde a até 2 km.</dd>
+          <dd>Um ponto por deficiência: sem porto ou aeroporto a até 10 km; sem rota alternativa; maior parte sem pavimento; travessia de rio (IBGE BC250) sem ponte mapeada ou ponte de madeira; sem escola (IBGE CNEFE 2022) ou unidade de saúde (CNES e CNEFE) a até 2 km.</dd>
           <dt>D · Desenvolvimento local (0–10)</dt>
-          <dd>Uso do solo (0–5: comunidade, assentamento, agricultura, turismo, indústria/extrativismo) + nível de ocupação (média das notas de população do Censo 2022 num raio de 2 km e de nº de entroncamentos).</dd>
+          <dd>Uso do solo (0–5: comunidade, assentamento, agricultura, turismo, indústria/extrativismo) + nível de ocupação (média das notas de população do Censo 2022 num raio de 2 km e de nº de entroncamentos). A população de cada setor censitário entra pela fração dos seus domicílios (endereços do CNEFE 2022) que fica a até 2 km da via.</dd>
           <dt>F · Dificuldade de projeto e execução (0–10)</dt>
           <dd>Relevo (SRTM: &lt;60 m = 1; 60–120 m = 2; ≥120 m = 3), terreno (terra firme 0, várzea 1, igapó 2; várzea estimada por altitude média ≤ 30 m a até 2 km de rio; igapó só por vistoria), unidade de conservação, sítio arqueológico a até 1 km, terra indígena, obras de arte especiais (0 nenhuma, 1 possui, 2 ponte precisa de intervenção, 3 precisa implantar; igarapés menores contam como bueiro). Entra invertido: mais difícil reduz a prioridade.</dd>
         </dl>
@@ -114,6 +116,6 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>

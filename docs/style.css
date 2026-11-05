@@ -72,6 +72,8 @@ fieldset { border: 0; padding: 0; margin: 0 0 14px; display: grid; gap: 5px; }
 legend { font: 700 16px var(--fonte-c); margin-bottom: 4px; }
 .sw { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; border-radius: 2px; }
 .sw-aero { background: var(--rio); border-radius: 50%; }
+.sw-escola { background: var(--p3); border-radius: 50%; }
+.sw-saude { background: var(--p1); border-radius: 50%; }
 .sw-porto { background: #fff; border: 3px solid var(--rio); border-radius: 50%; }
 .sw-uc { background: rgba(47,93,70,.35); border: 1px solid var(--mata); }
 .sw-ti { background: rgba(184,69,42,.25); border: 1px solid var(--p2); }
