@@ -115,11 +115,11 @@ function filtrarModulo(k) {
 
 function desenharListaMod(k) {
   const d = MOD.dados[k], raiz = $(`#corpo-${k}`), max = d.filtradas[0]?.n.ip || 1;
-  raiz.querySelector("[data-f=resumo]").textContent = `${fmt(d.filtradas.length)} núcleos${d.filtradas.length !== d.ordem.length ? ` de ${fmt(d.ordem.length)}` : ""} · posição no ranking geral à esquerda`;
+  raiz.querySelector("[data-f=resumo]").textContent = `${fmt(d.filtradas.length)} núcleos${d.filtradas.length !== d.ordem.length ? ` de ${fmt(d.ordem.length)}` : ""}`;
   const larg = (x) => ((100 * x) / max).toFixed(1) + "%";
   raiz.querySelector("[data-f=lista]").innerHTML = d.filtradas.slice(0, d.limite).map((it) => `<li data-id="${esc(it.p.id)}" tabindex="0" class="${MOD.sel === it ? "ativo" : ""}">
-      <span class="pos">${it.pos}</span><span class="nome">${esc(it.p.nome)}</span><span class="ip">${fmt(it.n.ip * 100, 1)}</span>
-      <span class="sub">${esc(it.p.municipio)} · ${fmt(it.p.pessoas)} pessoas · V ${it.n.V}/5</span>
+      <span class="pos">${it.posf}</span><span class="nome">${esc(it.p.nome)}</span><span class="ip">${fmt(it.n.ip * 100, 1)}</span>
+      <span class="sub">${esc(it.p.municipio)} · ${fmt(it.p.pessoas)} pessoas · V ${it.n.V}/5${it.posf !== it.pos ? ` · ${it.pos}º no ranking geral` : ""}</span>
       <span class="faixa"><i class="v" style="width:${larg(it.n.pv)}"></i><i class="d" style="width:${larg(it.n.pd)}"></i><i class="r" style="width:${larg(it.n.pr)}"></i></span></li>`).join("") +
     (d.filtradas.length > d.limite ? `<li class="mais-li"><button class="mais" data-acao="mais">Mostrar mais ${Math.min(60, d.filtradas.length - d.limite)}</button></li>` : "");
 }
@@ -418,6 +418,9 @@ async function trocarModulo(k) {
   document.querySelectorAll(".modulos button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.mod === k));
   document.querySelectorAll(".mod").forEach((s) => (s.hidden = s.id !== "mod-" + k));
   for (const c of Object.values(MOD.camadas)) mapa.removeLayer(c);
+  // pontos da aba Ramais encobrem os candidatos: fora dela, só os portos ficam (em Terminais)
+  await Promise.all(["aeroportos", "portos", "escolas", "saude", "sitios"].map((c) =>
+    alternarCamada(c, document.querySelector(`[data-camada="${c}"]`).checked && (k === "ramais" || (k === "terminais" && c === "portos")))));
   if (k === "ramais") { camadaVias.addTo(mapa); estilizarMapa(); mapa.invalidateSize(); return; }
   mapa.removeLayer(camadaVias);
   mapa.setView([-4.6, -63.5], 6); // estado inteiro

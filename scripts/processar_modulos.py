@@ -234,6 +234,14 @@ for cm, idx in por_mun.items():
         indig = sum(s["pes"] for s in ss if s["tipo"] == "5") > pes / 2
         nucleos.append({"id": f"n{ss[0]['cd']}", "nome": nome, "municipio": nomes_mun.get(cm, nm_mun), "cod_mun": cm, "tipo": tipo, "indigena": indig,
                         "pessoas": pes, "domicilios": sum(s["dom"] for s in ss), "setores": sorted(s["cd"] for s in ss), "lon": round(float(cx), 5), "lat": round(float(cy), 5)})
+# só a maior mancha urbana do distrito-sede é a cidade; pedaços soltos (ex.: bairro de Manaus separado por rio) viram área urbana isolada
+maior = {}
+for n in nucleos:
+    if n["tipo"] == "sede municipal" and n["pessoas"] > maior.get(n["cod_mun"], {"pessoas": -1})["pessoas"]:
+        maior[n["cod_mun"]] = n
+for n in nucleos:
+    if n["tipo"] == "sede municipal" and maior[n["cod_mun"]] is not n:
+        n["nome"], n["tipo"] = f"Área urbana isolada de {n['municipio']}", "núcleo urbano"
 # comunidades fora dos aglomerados do IBGE (setores "área rural"): domicílios do CNEFE a até ~440 m uns dos outros
 rural = np.array([setores[i]["sit"] == "8" for i in up_set])
 cel = {}
