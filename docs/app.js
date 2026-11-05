@@ -160,7 +160,7 @@ function estilizarMapa() {
 }
 
 const iconeCirculo = (estilo) => (f, ll) => L.circleMarker(ll, estilo);
-async function carregar(nome) { const r = await fetch("data/" + nome); if (!r.ok) throw new Error(nome + ": " + r.status); return r.json(); }
+async function carregar(nome) { const r = await fetch("data/" + nome, { cache: "no-cache" }); if (!r.ok) throw new Error(nome + ": " + r.status); return r.json(); }
 
 function popupLista(titulo, props, extra = "") {
   return `<div class="popup-tit">${esc(props.nome || "(sem nome)")}</div><div>${esc(titulo)}${extra}</div>`;
