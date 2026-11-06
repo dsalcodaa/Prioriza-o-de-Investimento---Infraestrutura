@@ -95,6 +95,14 @@ legend { font: 700 16px var(--fonte-c); margin-bottom: 4px; }
 .sw-escola { background: var(--p3); border-radius: 50%; }
 .sw-saude { background: var(--p1); border-radius: 50%; }
 .sw-porto { background: #fff; border: 3px solid var(--rio); border-radius: 50%; }
+.sw-tseinfra { background: var(--rio); border: 2px solid #fff; outline: 1px solid var(--rio); transform: rotate(45deg) scale(.8); }
+.ctl-camadas { background: #fff; font: 13.5px var(--fonte); max-width: 290px; }
+.ctl-camadas .ctl-btn { display: block; border: 0; background: #fff; padding: 7px 12px; font: 600 14px var(--fonte); cursor: pointer; }
+.ctl-camadas .ctl-btn[aria-expanded="true"] { background: var(--tinta); color: #fff; }
+.ctl-camadas .ctl-painel { padding: 6px 10px 8px; max-height: 60vh; overflow-y: auto; }
+.ctl-camadas label { display: block; margin: 4px 0; cursor: pointer; }
+.ctl-camadas .ctl-acoes { display: flex; gap: 6px; margin-top: 6px; }
+.ctl-camadas .ctl-acoes button { flex: 1; font-size: 12.5px; padding: 3px 6px; }
 .sw-uc { background: rgba(47,93,70,.35); border: 1px solid var(--mata); }
 .sw-ti { background: rgba(184,69,42,.25); border: 1px solid var(--p2); }
 .sw-sitio { background: #6b3fa0; border-radius: 50%; width: 9px; height: 9px; }

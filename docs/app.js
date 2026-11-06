@@ -87,6 +87,7 @@ function recalcular() {
   calcularPerfis();
   filtrar();
   desenharGeral();
+  desenharPop();
   desenharMetodo();
 }
 
@@ -189,7 +190,7 @@ async function iniciar() {
     return;
   }
   [...new Set(VIAS.map((v) => v.p.municipio))].sort((a, b) => a.localeCompare(b, "pt")).forEach((m) =>
-    ["#f-mun", "#g-mun"].forEach((s) => $(s).insertAdjacentHTML("beforeend", `<option>${esc(m)}</option>`)));
+    ["#f-mun", "#g-mun", "#p-mun"].forEach((s) => $(s).insertAdjacentHTML("beforeend", `<option>${esc(m)}</option>`)));
   $("#meta").textContent = `Dados gerados em ${META.gerado_em}: ${fmt(META.n_vias)} vias, ${fmt(META.n_aeroportos)} aeroportos e pistas, ${fmt(META.n_portos)} portos, ${fmt(META.n_sitios)} sítios arqueológicos, ${fmt(META.n_ucs)} unidades de conservação, ${fmt(META.n_tis)} terras indígenas, ${fmt(META.n_setores)} setores censitários.`;
   montarPares();
   recalcular();
@@ -199,6 +200,8 @@ async function iniciar() {
   const defs = {
     aeroportos: ["aeroportos.geojson", { pointToLayer: iconeCirculo({ radius: 6, color: "#fff", weight: 1.5, fillColor: cor("--rio"), fillOpacity: 1 }),
       onEachFeature: (f, l) => l.bindPopup(popupLista(f.properties.tipo, f.properties)) }],
+    terminais_seinfra: ["terminais_existentes.geojson", { pointToLayer: (f, ll) => L.marker(ll, { icon: L.divIcon({ className: "ic-tseinfra", html: '<i class="sw sw-tseinfra"></i>', iconSize: [14, 14] }) }),
+      onEachFeature: (f, l) => l.bindPopup(popupLista("Terminal flutuante existente", f.properties, `<br>${esc(f.properties.municipio)} · cadastro da SEINFRA-AM`)) }],
     portos: ["portos.geojson", { pointToLayer: iconeCirculo({ radius: 5, color: cor("--rio"), weight: 3, fillColor: "#fff", fillOpacity: 1 }),
       onEachFeature: (f, l) => l.bindPopup(popupLista(f.properties.tipo, f.properties)) }],
     escolas: ["escolas.geojson", { pointToLayer: iconeCirculo({ radius: 3.5, color: "#fff", weight: 1, fillColor: cor("--p3"), fillOpacity: 1 }),
@@ -693,6 +696,71 @@ function relatorioPerfis() {
     <h2>Fontes de dados e limitações</h2>${fontesLimitacoes()}`);
 }
 
+/* ---------- ranking por população atendida ---------- */
+// pessoas dos setores censitários cruzados pelo traçado; empate: melhor posição no ranking oficial
+const ordemPop = (lista) => lista.sort((a, b) => b.p.pop_setores - a.p.pop_setores || a.pos - b.pos);
+function linhasPop() {
+  const mun = $("#p-mun").value;
+  return ordemPop(VIAS.filter((v) => !mun || v.p.municipio === mun));
+}
+function desenharPop() {
+  ordemPop([...VIAS]).forEach((v, i) => (v.posPop = i + 1));
+  const ls = linhasPop();
+  $("#pop-tabela").innerHTML = `<p class="nota">${fmt(ls.length)} vias. Clique numa via para abrir a ficha.</p>
+    <table class="geral"><thead><tr><th>Posição</th><th>Via</th><th>Pessoas atendidas</th><th>Setores cruzados</th><th>Ranking oficial</th></tr></thead><tbody>
+    ${ls.map((v) => `<tr data-id="${esc(v.p.id)}"><td class="forte">${v.posPop}º</td><td>${esc(v.p.nome)}<br><small>${esc(v.p.municipio)}</small></td><td>${fmt(v.p.pop_setores)}</td><td>${fmt(v.p.n_setores_cruzados)}</td><td>${v.pos}º</td></tr>`).join("")}
+    </tbody></table>`;
+}
+function relatorioPop() {
+  const ls = linhasPop(), mun = $("#p-mun").value;
+  abrirRelatorio(`
+    <h1>Ranking de ramais e rodovias por população atendida</h1>
+    <p class="cab">Amazonas · ${mun ? esc(mun) : "todos os municípios"} · ${fmt(ls.length)} vias · emitido em ${new Date().toLocaleDateString("pt-BR")}</p>
+    <p>As vias estão ordenadas pela quantidade de pessoas que atendem, medida pela soma dos moradores (Censo 2022) dos setores censitários cruzados pelo traçado; se o traçado não cruzar setor habitado, entram os setores a até 2 km. Em caso de empate, vem primeiro a via mais bem posicionada no ranking oficial.
+    Esta ordem não considera vulnerabilidade, desenvolvimento nem dificuldade de execução. A posição no ranking oficial, que combina esses critérios pelo método AHP do artigo de referência, aparece para comparação.</p>
+    <p class="aviso">${AVISO_ESTIMATIVA} O setor censitário rural pode ser extenso: parte dos moradores somados pode residir longe do traçado.</p>
+    <table class="rel-larga"><thead><tr><th class="n">Posição</th><th>Via</th><th>Município</th><th class="n">Extensão (km)</th><th class="n">Pessoas atendidas</th><th class="n">Setores cruzados</th><th class="n">Pessoas por km</th><th class="n">Ranking oficial</th></tr></thead><tbody>
+    ${ls.map((v) => `<tr><td class="n"><b>${v.posPop}º</b></td><td>${esc(v.p.nome)}<br><small>${esc(v.p.tipo)}</small></td><td>${esc(v.p.municipio)}</td><td class="n">${fmt(v.p.km, 1)}</td>
+      <td class="n">${fmt(v.p.pop_setores)}</td><td class="n">${fmt(v.p.n_setores_cruzados)}</td><td class="n">${v.p.km ? fmt(v.p.pop_setores / v.p.km) : "não se aplica"}</td><td class="n">${v.pos}º</td></tr>`).join("")}
+    </tbody></table>
+    <h2>Fontes de dados e limitações</h2>${fontesLimitacoes()}`);
+}
+
+/* ---------- botão de camadas no mapa ---------- */
+const ctlCamadas = L.control({ position: "topright" });
+ctlCamadas.onAdd = () => {
+  const d = L.DomUtil.create("div", "ctl-camadas leaflet-bar");
+  d.innerHTML = '<button type="button" class="ctl-btn" aria-expanded="false" title="Selecionar ou desativar camadas do mapa">Camadas</button><div class="ctl-painel" hidden></div>';
+  L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
+  return d;
+};
+ctlCamadas.addTo(mapa);
+const camadaFixa = (k) => (k === "vias" ? camadaVias : k === "candidatos" ? MOD.camadas[MOD.atual] : null);
+async function painelCamadas() {
+  const cand = DEF[MOD.atual] && MOD.camadas[MOD.atual] ? [["candidatos", `Candidatos a ${DEF[MOD.atual].nome}`]] : [];
+  const itens = [["vias", "Ramais e rodovias"], ...cand,
+    ...[...document.querySelectorAll("#aba-camadas [data-camada]")].map((c) => [c.dataset.camada, c.parentElement.textContent.trim()])];
+  const lig = await Promise.all(itens.map(async ([k]) => { const c = camadaFixa(k) || (await camadas[k]); return !!c && mapa.hasLayer(c); }));
+  $(".ctl-painel").innerHTML = itens.map(([k, r], i) => `<label><input type="checkbox" data-ctl="${k}" ${lig[i] ? "checked" : ""}> ${esc(r)}</label>`).join("") +
+    '<div class="ctl-acoes"><button type="button" data-ctl-todas="1">Ativar todas</button><button type="button" data-ctl-todas="0">Desativar todas</button></div>';
+}
+async function ligarCamada(k, on) {
+  const c = camadaFixa(k);
+  if (c) { on ? c.addTo(mapa) : mapa.removeLayer(c); if (on && k === "vias") estilizarMapa(); return; }
+  const cb = document.querySelector(`#aba-camadas [data-camada="${k}"]`); if (cb) cb.checked = on;
+  await alternarCamada(k, on);
+}
+$(".ctl-camadas").addEventListener("click", async (e) => {
+  if (e.target.closest(".ctl-btn")) {
+    const p = $(".ctl-painel"), abrir = p.hidden;
+    if (abrir) await painelCamadas();
+    p.hidden = !abrir; e.target.setAttribute("aria-expanded", abrir); return;
+  }
+  const t = e.target.dataset.ctlTodas;
+  if (t) { await Promise.all([...document.querySelectorAll("[data-ctl]")].map((c) => ligarCamada(c.dataset.ctl, t === "1"))); await painelCamadas(); }
+});
+$(".ctl-camadas").addEventListener("change", (e) => { const k = e.target.dataset.ctl; if (k) ligarCamada(k, e.target.checked); });
+
 /* ---------- relatórios ---------- */
 function abrirRelatorio(html, depois) {
   $("#rel-conteudo").innerHTML = html;
@@ -882,6 +950,9 @@ $("#ficha").addEventListener("click", (e) => {
 $("#btn-rel-geral").addEventListener("click", relatorioGeral);
 ["#g-ordem", "#g-mun"].forEach((s) => $(s).addEventListener("change", () => { gOrdem = $("#g-ordem").value; desenharGeral(); }));
 $("#btn-geral-imp").addEventListener("click", relatorioPerfis);
+$("#p-mun").addEventListener("change", desenharPop);
+$("#btn-pop-imp").addEventListener("click", relatorioPop);
+$("#pop-tabela").addEventListener("click", (e) => { const tr = e.target.closest("tr[data-id]"); if (tr) selecionar(VIAS.find((v) => v.p.id === tr.dataset.id)); });
 $("#geral-tabela").addEventListener("click", (e) => { const tr = e.target.closest("tr[data-id]"); if (tr) selecionar(VIAS.find((v) => v.p.id === tr.dataset.id)); });
 $("#rel-voltar").addEventListener("click", () => { $("#relatorio").hidden = true; });
 $("#rel-imprimir").addEventListener("click", () => window.print());

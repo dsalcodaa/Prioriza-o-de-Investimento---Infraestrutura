@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 <div id="app">
@@ -28,6 +28,7 @@
     <nav class="abas" role="tablist">
       <button role="tab" aria-selected="true" data-aba="ranking">Ranking</button>
       <button role="tab" aria-selected="false" data-aba="geral">Ranking geral</button>
+      <button role="tab" aria-selected="false" data-aba="pop">Por população</button>
       <button role="tab" aria-selected="false" data-aba="pesos">Pesos AHP</button>
       <button role="tab" aria-selected="false" data-aba="camadas">Camadas</button>
       <button role="tab" aria-selected="false" data-aba="metodo">Método</button>
@@ -63,6 +64,13 @@
       <details class="nota"><summary>Como os perfis são calculados</summary><div id="geral-metodo"></div></details>
     </section>
 
+    <section id="aba-pop" class="aba" role="tabpanel" hidden>
+      <p class="nota">Ordena ramais e rodovias pela quantidade de pessoas que atendem: a soma dos moradores (Censo 2022) dos setores censitários cruzados pelo traçado. Se o traçado não cruzar setor habitado, entram os setores a até 2 km. Esta ordem não considera vulnerabilidade, desenvolvimento nem dificuldade; mostra onde a obra alcança mais gente. A posição no ranking oficial aparece ao lado para comparação.</p>
+      <div class="geral-ctl"><label>Município <select id="p-mun"><option value="">Todos os municípios</option></select></label></div>
+      <div class="acoes"><button id="btn-pop-imp" class="primario">Imprimir tabela</button></div>
+      <div id="pop-tabela"></div>
+    </section>
+
     <section id="aba-pesos" class="aba" role="tabpanel" hidden>
       <p class="nota">Os pesos dos critérios são obtidos pelo método AHP a partir de comparações pareadas. Para cada par, indique qual critério é mais importante e em que intensidade, de 1 (igual importância) a 9 (importância extrema). Os valores padrão reproduzem os julgamentos do artigo de referência e resultam nos pesos 0,648, 0,230 e 0,122. As alterações valem apenas neste navegador.</p>
       <div id="pares"></div>
@@ -92,7 +100,8 @@
       </fieldset>
       <fieldset><legend>Camadas</legend>
         <label><input type="checkbox" data-camada="aeroportos" checked> <i class="sw sw-aero"></i> Aeroportos e pistas</label>
-        <label><input type="checkbox" data-camada="portos" checked> <i class="sw sw-porto"></i> Portos e flutuantes</label>
+        <label><input type="checkbox" data-camada="terminais_seinfra" checked> <i class="sw sw-tseinfra"></i> Terminais flutuantes (SEINFRA-AM)</label>
+        <label><input type="checkbox" data-camada="portos" checked> <i class="sw sw-porto"></i> Portos e flutuantes (OpenStreetMap)</label>
         <label><input type="checkbox" data-camada="escolas"> <i class="sw sw-escola"></i> Escolas (IBGE CNEFE)</label>
         <label><input type="checkbox" data-camada="saude"> <i class="sw sw-saude"></i> Saúde (CNES + CNEFE)</label>
         <label><input type="checkbox" data-camada="ucs"> <i class="sw sw-uc"></i> Unidades de conservação (INPE)</label>
@@ -135,7 +144,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="textos.js?v=2"></script>
-<script src="app.js?v=10"></script>
-<script src="modulos.js?v=6"></script>
+<script src="app.js?v=11"></script>
+<script src="modulos.js?v=8"></script>
 </body>
 </html>

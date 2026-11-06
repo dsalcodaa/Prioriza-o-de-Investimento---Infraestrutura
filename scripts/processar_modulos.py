@@ -320,9 +320,35 @@ def faixa(v, lim):
 def regic_dep(m, tema, km):
     d = m.get("deslocamentos", {}).get(tema)
     return d is not None and d["dist_media_km"] > km
-terminais = []
-for n in nucleos:
+# terminais flutuantes do cadastro da SEINFRA-AM (os nomes vêm com dupla codificação no DBF)
+def texto_dbf(s):
+    for _ in range(3):
+        try:
+            s = s.encode("latin1").decode("utf-8")
+        except UnicodeError:
+            break
+    return " ".join(s.split())
+MINUSC = {"Do", "Da", "De", "Dos", "Das"}
+sf_ter = shapefile.Reader(str(RAIZ.parent / "8-TERMINAIS FLUTUANTES" / "TERMINAIS FLUTUANTES.shp"), encoding="latin1")
+ter_seinfra = [{"nome": texto_dbf(r[1]), "municipio": " ".join(w.lower() if w in MINUSC else w for w in texto_dbf(r[0]).title().split()),
+                "tipo": "Terminal flutuante (SEINFRA-AM)", "fonte": "Cadastro de terminais flutuantes da SEINFRA-AM",
+                "lon": s.points[0][0], "lat": s.points[0][1]} for s, r in zip(sf_ter.shapes(), sf_ter.records())]
+# já tem terminal: terminal flutuante da SEINFRA ou porto, porto flutuante ou terminal hidroviário do OSM a até 2 km (píer não conta)
+R_TEM = 2
+existentes_ter = ter_seinfra + [{"nome": p.get("nome") or "Sem nome", "tipo": p["tipo"] + " (OpenStreetMap)", "lon": c[0], "lat": c[1]}
+                                for c, p in portos if p.get("tipo") in ("Terminal hidroviário", "Porto", "Porto flutuante")]
+i_ex, d_ex = mais_proximo(indice([(e["lon"], e["lat"]) for e in existentes_ter])[0], nu_m)
+i_ts, d_ts = mais_proximo(indice([(e["lon"], e["lat"]) for e in ter_seinfra])[0], nu_m)
+terminais, ja_atendidos = [], []
+for k, n in enumerate(nucleos):
     if n["dist_agua_km"] > 1 or n["pessoas"] < 50 or n["tipo"] == "sede municipal" and n["pessoas"] > 200000:
+        continue
+    if d_ts[k] < n["dist_porto_km"]:
+        n.update(dist_porto_km=round(float(d_ts[k]), 2), porto=f"{ter_seinfra[i_ts[k]]['nome']} (terminal flutuante da SEINFRA-AM)")
+    if d_ex[k] <= R_TEM:
+        e = existentes_ter[i_ex[k]]
+        ja_atendidos.append({"nome": n["nome"], "municipio": n["municipio"], "pessoas": n["pessoas"], "terminal": e["nome"],
+                             "tipo_terminal": e["tipo"], "dist_km": round(float(d_ex[k]), 2)})
         continue
     m = mun.get(int(n["cod_mun"]), {})
     vul = {"sem_terminal": int(n["dist_porto_km"] > 5), "sem_via": int(n["dist_via_km"] > 2),
@@ -330,7 +356,7 @@ for n in nucleos:
            "regic_saude_longe": int(regic_dep(m, "saude_bm", 200))}
     terminais.append({**n, "vul": vul, "n_demanda": faixa(n["pessoas"], [200, 500, 1000, 5000]), "importancia_regic": m.get("importancia", 0.25),
                       "hierarquia": m.get("hierarquia")})
-print("  candidatos a terminal", len(terminais))
+print("  candidatos a terminal", len(terminais), "| retirados por já terem terminal a até", R_TEM, "km:", len(ja_atendidos))
 
 # ---------------------------------------------------------------- aeródromos
 print("aeródromos…")
@@ -404,6 +430,7 @@ salvar("regic.json", {"municipios": sorted(mun.values(), key=lambda m: -m["impor
                       "notas": {"importancia": "0,7 × nota da hierarquia + 0,3 × índice de atração (log, relativo ao maior do AM)",
                                 "nota_hierarquia": NIVEL}})
 salvar("terminais.geojson", fc(terminais, "*"))
+salvar("terminais_existentes.geojson", fc(ter_seinfra, "*"))
 salvar("aerodromos_candidatos.geojson", fc(aerodromos, "*"))
 salvar("aerodromos_existentes.geojson", fc(existentes + priv, "*"))
 salvar("saude_unidades.geojson", fc(unidades, "*"))
@@ -414,5 +441,7 @@ salvar("modulos_meta.json", {"raio_aerodromo_km": R_AERO, "ref_equipe": REF_EQUI
                              "pessoas_sem_prim_5km": round(float(up_pes[up_d_prim > 5].sum())),
                              "pessoas_sem_hosp_100km": round(float(up_pes[up_d_hosp > 100].sum())),
                              "pessoas_sem_aero_pub": round(float(up_pes[up_d_pub > R_AERO].sum())),
+                             "raio_terminal_existente_km": R_TEM, "n_terminais_seinfra": len(ter_seinfra),
+                             "terminais_ja_atendidos": sorted(ja_atendidos, key=lambda x: -x["pessoas"]),
                              "n_prim": len(prim), "n_hosp": len(hosp), "n_aero_pub": len(aero_pub), "n_aero_priv": len(aero_priv)})
 print("pronto:", len(terminais), "terminais,", len(aerodromos), "aeródromos,", len(lacunas), "lacunas de saúde")

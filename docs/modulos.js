@@ -27,13 +27,16 @@ const DEF = {
     faixas: "menos de 200 pessoas = 1; 200 a 499 = 2; 500 a 999 = 3; 1.000 a 4.999 = 4; 5.000 ou mais = 5",
     filtro: ["Só núcleos sem porto ou terminal a até 5 km", (p) => p.vul.sem_terminal],
     desempate: (p) => p.pessoas,
+    pop: (p) => p.pessoas, // ordenação por população atendida: moradores do núcleo (setores do Censo 2022)
     extra: (p) => `À margem de ${p.agua || "rio ou lago sem nome no BC250"} (${fmt(p.dist_agua_km * 1000)} m)`,
-    metodo: `<p>Candidatos: aglomerados e núcleos urbanos do Censo 2022 (setores agrupados por contiguidade) com pelo menos 50 moradores e a até 1 km de um rio largo ou lago (massas d'água do IBGE BC250).</p>
+    metodo: `<p>Candidatos: aglomerados e núcleos urbanos do Censo 2022 (setores agrupados por contiguidade) com pelo menos 50 moradores e a até 1 km de um rio largo ou lago (massas d'água do IBGE BC250).
+      Ficam fora do ranking os núcleos que já têm terminal a até 2 km: terminal flutuante do cadastro da SEINFRA-AM, ou porto, porto flutuante ou terminal hidroviário do OpenStreetMap. Píeres e atracadouros não contam como terminal. A lista fica abaixo do ranking.</p>
+      <p><b>Ordenação por população atendida</b>: opção que ordena os candidatos apenas pelo número de moradores do núcleo (Censo 2022), sem considerar vulnerabilidade nem REGIC.</p>
       <p><b>Índice</b> = ${fmt(PM.V, 3)}·V/5 + ${fmt(PM.D, 3)}·D/5 + ${fmt(PM.R, 3)}·R. Pesos por AHP: vulnerabilidade e demanda com a mesma importância, cada uma 3 vezes mais importante que o REGIC (RC = 0).</p>
       <dl><dt>V · Vulnerabilidade de transporte (0–5)</dt><dd>Um ponto por deficiência: sem porto ou terminal mapeado a até 5 km; sem acesso rodoviário; a mais de 30 km da sede; sem atenção primária à saúde a até 5 km; município cujos moradores viajam mais de 200 km para saúde básica e média (REGIC).</dd>
       <dt>D · Demanda (1–5)</dt><dd>Moradores do núcleo no Censo 2022.</dd>
       <dt>R · Importância REGIC do município (0–1)</dt><dd>Hierarquia urbana e atração do município (aba REGIC).</dd></dl>
-      <p class="nota">Portos e terminais existentes vêm do OpenStreetMap e podem estar incompletos. Confirme em campo antes de decidir.</p>`,
+      <p class="nota">Portos e terminais existentes vêm do OpenStreetMap e do cadastro de terminais flutuantes da SEINFRA-AM e podem estar incompletos. Confirme em campo antes de decidir.</p>`,
   },
   aerodromos: {
     arq: "aerodromos_candidatos.geojson", prefixo: "aer", nome: "aeródromo", titulo: "Aeródromos",
@@ -94,12 +97,14 @@ function corpoRanking(k) {
   return `<div class="filtros">
       <input type="search" data-f="busca" placeholder="Buscar núcleo ou município" aria-label="Buscar">
       <label><input type="checkbox" data-f="so" checked> ${def.filtro[0]}</label>
+      ${def.pop ? '<select data-f="ord" aria-label="Ordenar"><option value="ip">Ordenar por prioridade (índice)</option><option value="pop">Ordenar por população atendida</option></select>' : ""}
       <select data-f="mun" aria-label="Município"><option value="">Todos os municípios</option></select>
     </div>
     <div class="resumo" data-f="resumo"></div>
     <ol class="lista" data-f="lista"></ol>
     <div class="acoes"><button class="primario" data-acao="rel-geral">Relatório geral do ranking</button><button data-acao="csv">Baixar ranking (CSV)</button></div>
-    <details class="metodo-mod"><summary>Como o ranking é calculado</summary>${def.metodo}</details>`;
+    <details class="metodo-mod"><summary>Como o ranking é calculado</summary>${def.metodo}</details>
+    ${def.pop ? '<details class="metodo-mod" data-f="atendidos"><summary>Locais que já têm terminal (retirados do ranking)</summary></details>' : ""}`;
 }
 
 function filtrarModulo(k) {
@@ -108,6 +113,8 @@ function filtrarModulo(k) {
   const so = raiz.querySelector("[data-f=so]").checked, mun = raiz.querySelector("[data-f=mun]").value;
   d.filtradas = d.ordem.filter((it) => (!so || def.filtro[1](it.p)) && (!mun || it.p.municipio === mun) &&
     (!q || (it.p.nome + " " + it.p.municipio).toLowerCase().includes(q)));
+  d.porPop = raiz.querySelector("[data-f=ord]")?.value === "pop";
+  if (d.porPop) d.filtradas.sort((a, b) => def.pop(b.p) - def.pop(a.p) || a.pos - b.pos);
   d.filtradas.forEach((x, i) => (x.posf = i + 1));
   desenharListaMod(k);
   estilizarMod(k);
@@ -115,11 +122,11 @@ function filtrarModulo(k) {
 
 function desenharListaMod(k) {
   const d = MOD.dados[k], raiz = $(`#corpo-${k}`), max = d.filtradas[0]?.n.ip || 1;
-  raiz.querySelector("[data-f=resumo]").textContent = `${fmt(d.filtradas.length)} núcleos${d.filtradas.length !== d.ordem.length ? ` de ${fmt(d.ordem.length)}` : ""}`;
+  raiz.querySelector("[data-f=resumo]").textContent = `${fmt(d.filtradas.length)} núcleos${d.filtradas.length !== d.ordem.length ? ` de ${fmt(d.ordem.length)}` : ""}${d.porPop ? ", ordenados por população atendida" : ""}`;
   const larg = (x) => ((100 * x) / max).toFixed(1) + "%";
   raiz.querySelector("[data-f=lista]").innerHTML = d.filtradas.slice(0, d.limite).map((it) => `<li data-id="${esc(it.p.id)}" tabindex="0" class="${MOD.sel === it ? "ativo" : ""}">
       <span class="pos">${it.posf}</span><span class="nome">${esc(it.p.nome)}</span><span class="ip">${fmt(it.n.ip * 100, 1)}</span>
-      <span class="sub">${esc(it.p.municipio)} · ${fmt(it.p.pessoas)} pessoas · V ${it.n.V}/5${it.posf !== it.pos ? ` · ${it.pos}º no ranking geral` : ""}</span>
+      <span class="sub">${esc(it.p.municipio)} · ${fmt(it.p.pessoas)} pessoas · V ${it.n.V}/5${it.posf !== it.pos ? ` · ${it.pos}º no índice de prioridade` : ""}</span>
       <span class="faixa"><i class="v" style="width:${larg(it.n.pv)}"></i><i class="d" style="width:${larg(it.n.pd)}"></i><i class="r" style="width:${larg(it.n.pr)}"></i></span></li>`).join("") +
     (d.filtradas.length > d.limite ? `<li class="mais-li"><button class="mais" data-acao="mais">Mostrar mais ${Math.min(60, d.filtradas.length - d.limite)}</button></li>` : "");
 }
@@ -248,12 +255,12 @@ function relatorioMod(it) {
 function relatorioGeralMod(k) {
   const d = MOD.dados[k], def = DEF[k], linhas = d.filtradas.slice(0, 100);
   abrirRelatorio(`
-    <h1>Ranking de ${def.titulo.toLowerCase()}</h1>
-    <p class="cab">Amazonas · ${fmt(d.filtradas.length)} núcleos no filtro atual · gerado em ${new Date().toLocaleDateString("pt-BR")}</p>
+    <h1>Ranking de ${def.titulo.toLowerCase()}${d.porPop ? " por população atendida" : ""}</h1>
+    <p class="cab">Amazonas · ${fmt(d.filtradas.length)} núcleos no filtro atual · ${d.porPop ? "ordenado por população atendida" : "ordenado pelo índice de prioridade"} · gerado em ${new Date().toLocaleDateString("pt-BR")}</p>
     <div class="rel-mapa" id="rel-mapa"></div>
-    <table><thead><tr><th class="n">Pos.</th><th>Núcleo</th><th>Município</th><th class="n">Pessoas</th><th class="n">V</th><th class="n">D</th><th class="n">REGIC</th><th class="n">Índice</th></tr></thead><tbody>
-    ${linhas.map((it) => `<tr><td class="n">${it.pos}</td><td>${esc(it.p.nome)}<br><small>${esc(it.p.tipo)}</small></td><td>${esc(it.p.municipio)}</td><td class="n">${fmt(it.p.pessoas)}</td>
-      <td class="n">${it.n.V}</td><td class="n">${it.n.Dm}</td><td class="n">${fmt(it.n.R, 2)}</td><td class="n"><b>${fmt(it.n.ip * 100, 1)}</b></td></tr>`).join("")}
+    <table><thead><tr><th class="n">Posição</th><th>Núcleo</th><th>Município</th><th class="n">Pessoas</th><th class="n">V</th><th class="n">D</th><th class="n">REGIC</th><th class="n">Índice</th>${d.porPop ? '<th class="n">Posição no índice</th>' : ""}</tr></thead><tbody>
+    ${linhas.map((it) => `<tr><td class="n">${it.posf}</td><td>${esc(it.p.nome)}<br><small>${esc(it.p.tipo)}</small></td><td>${esc(it.p.municipio)}</td><td class="n">${fmt(it.p.pessoas)}</td>
+      <td class="n">${it.n.V}</td><td class="n">${it.n.Dm}</td><td class="n">${fmt(it.n.R, 2)}</td><td class="n"><b>${fmt(it.n.ip * 100, 1)}</b></td>${d.porPop ? `<td class="n">${it.pos}º</td>` : ""}</tr>`).join("")}
     </tbody></table>
     ${d.filtradas.length > 100 ? `<p class="nota">Mostrando os 100 primeiros de ${fmt(d.filtradas.length)}.</p>` : ""}
     <div class="rel-rodape">${def.metodo}<p>Fontes: ${FONTES_MOD}</p></div>`,
@@ -261,7 +268,7 @@ function relatorioGeralMod(k) {
     const m = L.map("rel-mapa", { zoomControl: false });
     L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", { maxZoom: 17, attribution: atrib.topo }).addTo(m);
     const g = L.featureGroup(linhas.slice(0, 20).map((it) => L.circleMarker([it.p.lat, it.p.lon], { radius: 7, color: "#fff", weight: 1.5, fillColor: cor("--p1"), fillOpacity: 1 })
-      .bindTooltip(`${it.pos}º ${it.p.nome}`, { permanent: it.pos <= 5, direction: "top" }))).addTo(m);
+      .bindTooltip(`${it.posf}º ${it.p.nome}`, { permanent: it.posf <= 5, direction: "top" }))).addTo(m);
     if (linhas.length) m.fitBounds(g.getBounds(), { padding: [20, 20], maxZoom: 9 });
   });
 }
@@ -418,6 +425,13 @@ function relatorioMunicipio(cod) {
 }
 
 /* ---------- troca de módulo ---------- */
+async function listaAtendidos(el) {
+  const m = await carregar("modulos_meta.json"), l = m.terminais_ja_atendidos || [];
+  el.innerHTML = `<summary>Locais que já têm terminal, retirados do ranking (${fmt(l.length)})</summary>
+    <p class="nota">Núcleos com terminal existente a até ${fmt(m.raio_terminal_existente_km)} km. Terminais flutuantes do cadastro da SEINFRA-AM: ${fmt(m.n_terminais_seinfra)}.</p>
+    <ol>${l.map((x) => `<li>${esc(x.nome)} (${esc(x.municipio)}), ${fmt(x.pessoas)} pessoas. ${esc(x.tipo_terminal)}: ${esc(x.terminal)}, a ${kmf(x.dist_km, 2)}</li>`).join("")}</ol>`;
+}
+
 async function trocarModulo(k) {
   MOD.atual = k; MOD.sel = null; selecionada = null;
   $("#ficha").hidden = true;
@@ -425,8 +439,9 @@ async function trocarModulo(k) {
   document.querySelectorAll(".mod").forEach((s) => (s.hidden = s.id !== "mod-" + k));
   for (const c of Object.values(MOD.camadas)) mapa.removeLayer(c);
   // pontos da aba Ramais encobrem os candidatos: fora dela, só os portos ficam (em Terminais)
-  await Promise.all(["aeroportos", "portos", "escolas", "saude", "sitios"].map((c) =>
-    alternarCamada(c, document.querySelector(`[data-camada="${c}"]`).checked && (k === "ramais" || (k === "terminais" && c === "portos")))));
+  await Promise.all(["aeroportos", "portos", "terminais_seinfra", "escolas", "saude", "sitios"].map((c) =>
+    alternarCamada(c, document.querySelector(`[data-camada="${c}"]`).checked && (k === "ramais" || (k === "terminais" && (c === "portos" || c === "terminais_seinfra"))))));
+  $(".ctl-painel").hidden = true; $(".ctl-btn").setAttribute("aria-expanded", false); // camadas mudam com o módulo
   if (k === "ramais") { camadaVias.addTo(mapa); estilizarMapa(); mapa.invalidateSize(); return; }
   mapa.removeLayer(camadaVias);
   mapa.setView([-4.6, -63.5], 6); // estado inteiro
@@ -436,6 +451,7 @@ async function trocarModulo(k) {
       await carregarModulo(k);
       if (!corpo.dataset.pronto) {
         corpo.innerHTML = corpoRanking(k); corpo.dataset.pronto = 1;
+        if (DEF[k].pop) listaAtendidos(corpo.querySelector("[data-f=atendidos]"));
         [...new Set(MOD.dados[k].ordem.map((x) => x.p.municipio))].sort((a, b) => a.localeCompare(b, "pt")).forEach((m) =>
           corpo.querySelector("[data-f=mun]").insertAdjacentHTML("beforeend", `<option>${esc(m)}</option>`));
       }

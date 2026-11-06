@@ -51,11 +51,17 @@ Mostra, para cada via, a posição no ranking oficial e em três perfis de decis
 - A população dos setores cruzados (`pop_setores`) só é usada nos perfis. O D do ranking oficial continua com a população no raio de 2 km.
 - Os julgamentos 3 e 5 são referência de trabalho e devem ser validados pela SEINFRA-AM.
 
+### Ranking por população
+
+- Ramais e rodovias (aba Por população): ordem pelas pessoas dos setores censitários cruzados pelo traçado (`pop_setores`), empate pela posição oficial. Tabela imprimível com pessoas por km.
+- Terminais: seletor "Ordenar por população atendida" no módulo (moradores do núcleo). O relatório do módulo segue a ordem escolhida.
+
 ### Terminais flutuantes e aeródromos
 
 Índice = 3/7·V/5 + 3/7·demanda/5 + 1/7·R (AHP: V e demanda com peso igual, cada um 3 vezes o REGIC; RC = 0).
 
 - **Candidatos a terminal:** núcleos a até 1 km de rio largo ou lago (BC250) e com 50 pessoas ou mais. A cidade de Manaus fica fora: tem mais de 200 mil pessoas.
+- **Locais que já têm terminal saem do ranking:** terminal flutuante da SEINFRA-AM (31, `../8-TERMINAIS FLUTUANTES/TERMINAIS FLUTUANTES.shp`) ou porto, porto flutuante ou terminal hidroviário do OSM a até 2 km do núcleo (píer não conta). Na última execução saíram 101 e ficaram 1.071 candidatos. A lista aparece no módulo. Os terminais da SEINFRA também entram na distância ao terminal mais próximo (item "sem terminal a 5 km").
 - **Vulnerabilidade do terminal (0–5):** sem porto a até 5 km; sem via a até 2 km; sede municipal a mais de 30 km; sem atenção primária a até 5 km; moradores do município viajam mais de 200 km para saúde básica e média (REGIC).
 - **Demanda do terminal:** faixas de moradores 200 / 500 / 1.000 / 5.000.
 - **Candidatos a aeródromo:** núcleos com 1.000 pessoas ou mais. Raio de atendimento de 50 km.
@@ -99,7 +105,8 @@ Os textos da ficha, da aba Método e do relatório em PDF saem de `textos.js` e 
 Arquivos de entrada fora desta pasta, usados pelos scripts:
 
 - traçado SEINFRA: `../3-RAMAIS/1-TRAÇADO RAMAIS/RAMAIS - TRAÇADO REV06 - 16-05-2025/VICINAIS-RAMAIS-ESTRADAS - SEINFRA 2025.shp`;
-- planilhas do REGIC: `../REGIC IBGE/`.
+- planilhas do REGIC: `../REGIC IBGE/`;
+- terminais flutuantes da SEINFRA: `../8-TERMINAIS FLUTUANTES/TERMINAIS FLUTUANTES.shp` (nomes com dupla codificação no DBF, corrigidos no script). O registro "Comunidade Filadélfia" (Benjamin Constant) está na longitude −59,63°, longe do município: conferir a coordenada com a SEINFRA.
 
 Rodar localmente: `python -m http.server 8000 -d docs`.
 
@@ -153,4 +160,5 @@ Ao mudar `app.js`, `modulos.js` ou `style.css`, aumente o `?v=` correspondente n
 - 06/11/2026: reformulação editorial da plataforma e do relatório em PDF (base `textos.js`, natureza de cada informação, alerta de possível inconsistência no indicador de assentamento). Cálculos e ranking inalterados.
 - 06/11/2026: premissa de pavimento e pontes pela coluna Situação do REV06 e bloco Vistoria de campo.
 - 06/11/2026: aba Ranking geral (ranking oficial + perfis Necessidade, Benefício social e Escoamento da produção, coluna Cenários, tabela imprimível); população por setores cruzados; produção pelo CNEFE (`data/raw/ibge_cnefe_producao_AM.json`); vistoria de produção. Ranking oficial inalterado.
+- 06/11/2026: aba Por população (ramais), ordenação por população nos terminais, botão Camadas no mapa (todas as camadas, em qualquer módulo), terminais flutuantes da SEINFRA como camada e retirada do ranking dos locais que já têm terminal.
 - 05/11/2026: correções na aba Terminais (numeração da lista filtrada, camadas dos ramais ocultas fora da aba, manchas urbanas isoladas).
