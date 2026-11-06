@@ -10,17 +10,17 @@ const pct = (a, b) => (b ? `${fmt((100 * a) / b, 1)} %` : "—");
 
 function regicTxt(p, tema) {
   const m = REGIC[p.cod_mun], d = m?.deslocamentos?.[tema];
-  return d ? `${m.nome}: destino principal ${d.destino} (${fmt(d.pct_destino)} % das respostas), distância média ${fmt(d.dist_media_km)} km` : "sem dado no REGIC para o município";
+  return d ? `Segundo o REGIC 2018, o principal destino dos moradores de ${m.nome} é ${d.destino} (${fmt(d.pct_destino)} % das respostas), a uma distância média de ${fmt(d.dist_media_km)} km.` : "Não há dado do REGIC para o município.";
 }
 
 const DEF = {
   terminais: {
     arq: "terminais.geojson", prefixo: "ter", nome: "terminal", titulo: "Terminais hidroviários (flutuantes)",
     itens: [
-      ["sem_terminal", "Sem porto ou terminal a até 5 km", (p) => p.porto ? `mais próximo: ${p.porto} a ${kmf(p.dist_porto_km)}` : "nenhum mapeado"],
-      ["sem_via", "Sem acesso rodoviário (via a mais de 2 km)", (p) => `via mais próxima a ${kmf(p.dist_via_km)}`],
-      ["longe_sede", "A mais de 30 km da sede do município", (p) => `${kmf(p.dist_sede_km)} da sede`],
-      ["sem_saude", "Sem atenção primária à saúde a até 5 km", (p) => `${p.prim} a ${kmf(p.dist_prim_km)}`],
+      ["sem_terminal", "Sem porto ou terminal a até 5 km", (p) => p.porto ? `Porto ou terminal registrado mais próximo: ${p.porto}, a ${kmf(p.dist_porto_km)}.` : "Não foram identificados portos ou terminais registrados nas bases consultadas."],
+      ["sem_via", "Sem acesso rodoviário (via a mais de 2 km)", (p) => `Via terrestre registrada mais próxima a ${kmf(p.dist_via_km)}.`],
+      ["longe_sede", "A mais de 30 km da sede do município", (p) => `Distância à sede municipal: ${kmf(p.dist_sede_km)}.`],
+      ["sem_saude", "Sem atenção primária à saúde a até 5 km", (p) => `Unidade de atenção primária registrada mais próxima: ${p.prim}, a ${kmf(p.dist_prim_km)}.`],
       ["regic_saude_longe", "Moradores do município viajam mais de 200 km, em média, para saúde básica e média (REGIC)", (p) => regicTxt(p, "saude_bm")],
     ],
     demanda: (p) => `${fmt(p.pessoas)} pessoas e ${fmt(p.domicilios)} domicílios no núcleo (Censo 2022)`,
@@ -38,10 +38,10 @@ const DEF = {
   aerodromos: {
     arq: "aerodromos_candidatos.geojson", prefixo: "aer", nome: "aeródromo", titulo: "Aeródromos",
     itens: [
-      ["sem_publico", "Sem aeródromo público (ANAC) a até 50 km", (p) => `${p.aero_pub} a ${kmf(p.dist_aero_pub_km)}`],
-      ["sem_nenhum", "Sem nenhum aeródromo, nem privado, a até 50 km", (p) => `${p.aero} a ${kmf(p.dist_aero_km)}`],
-      ["sem_via", "Sem acesso rodoviário (via a mais de 5 km)", (p) => `via mais próxima a ${kmf(p.dist_via_km)}`],
-      ["hospital_longe", "Hospital a mais de 100 km (remoção aeromédica)", (p) => `${p.hosp} a ${kmf(p.dist_hosp_km)}`],
+      ["sem_publico", "Sem aeródromo público (ANAC) a até 50 km", (p) => `Aeródromo público mais próximo: ${p.aero_pub}, a ${kmf(p.dist_aero_pub_km)}.`],
+      ["sem_nenhum", "Sem nenhum aeródromo, nem privado, a até 50 km", (p) => `Aeródromo mais próximo, público ou privado: ${p.aero}, a ${kmf(p.dist_aero_km)}.`],
+      ["sem_via", "Sem acesso rodoviário (via a mais de 5 km)", (p) => `Via terrestre registrada mais próxima a ${kmf(p.dist_via_km)}.`],
+      ["hospital_longe", "Hospital a mais de 100 km (remoção aeromédica)", (p) => `Hospital registrado mais próximo: ${p.hosp}, a ${kmf(p.dist_hosp_km)}.`],
       ["regic_aeroporto_longe", "Moradores do município viajam mais de 150 km, em média, para usar aeroporto (REGIC)", (p) => regicTxt(p, "aeroporto")],
     ],
     demanda: (p) => `${fmt(p.demanda_sem_aerodromo)} pessoas a até 50 km sem aeródromo público a até 50 km (núcleo: ${fmt(p.pessoas)} pessoas)`,
@@ -136,24 +136,30 @@ function estilizarMod(k) {
 /* ---------- ficha e explicação ---------- */
 function porQueMod(it) {
   const k = it.k, def = DEF[k], d = MOD.dados[k], p = it.p, n = it.n, N = d.ordem.length;
-  const com = def.itens.filter(([c]) => p.vul[c]).map(([, r]) => esc(r)), sem = def.itens.filter(([c]) => !p.vul[c]).map(([, r]) => esc(r));
+  const com = def.itens.filter(([c]) => p.vul[c]).map(([, r]) => esc(r.charAt(0).toLowerCase() + r.slice(1))), sem = def.itens.filter(([c]) => !p.vul[c]).map(([, r]) => `“${esc(r)}”`);
   const media = (f) => d.ordem.reduce((s, x) => s + f(x), 0) / N;
-  const rel = (a, m) => (a > m + 0.05 ? "acima da média" : a < m - 0.05 ? "abaixo da média" : "na média");
+  const rel = (a, m) => `${a > m + 0.05 ? "acima da" : a < m - 0.05 ? "abaixo da" : "em linha com a"} média dos ${fmt(N)} candidatos (${fmt(m, 1)})`;
   const empate = d.ordem.filter((x) => Math.abs(x.n.ip - n.ip) < 5e-5).length - 1;
   const m = REGIC[p.cod_mun];
-  const partes = { pv: "vulnerabilidade", pd: "demanda", pr: "importância REGIC do município" };
-  const viz = (o, acima) => o ? `<li>${acima ? "Logo acima" : "Logo abaixo"}: <b>${esc(o.p.nome)}</b> (${o.pos}º, ${esc(o.p.municipio)}, índice ${fmt(o.n.ip * 100, 1)}).
-    ${compara(n, o, partes, (c) => ({ pv: `V ${n.V} contra ${o.n.V}`, pd: `D ${n.Dm} contra ${o.n.Dm}`, pr: `REGIC ${fmt(n.R, 2)} contra ${fmt(o.n.R, 2)}` }[c]), "a demanda")}</li>` : "";
+  const partes = { pv: "vulnerabilidade", pd: "demanda", pr: "importância do município (REGIC)" };
+  const viz = (o, acima) => o ? `<li><b>${acima ? "Núcleo imediatamente anterior" : "Núcleo imediatamente subsequente"}:</b> ${esc(o.p.nome)} (${o.pos}ª posição, ${esc(o.p.municipio)}, índice ${fmt(o.n.ip * 100, 1)}).
+    ${compara(n, o, partes, (c) => ({ pv: `nota ${n.V} contra ${o.n.V}`, pd: `nota ${n.Dm} contra ${o.n.Dm}`, pr: `importância ${fmt(n.R, 2)} contra ${fmt(o.n.R, 2)}` }[c]),
+      `maior demanda (${fmt(def.desempate(p))} nesta localidade e ${fmt(def.desempate(o.p))} na outra)`)}</li>` : "";
   return `<div class="porque">
-    <p><b>${esc(p.nome)}</b> ficou em <b>${it.pos}º de ${fmt(N)}</b> candidatos a ${def.nome}, com índice ${fmt(n.ip * 100, 1)} de 100. Está à frente de ${fmt(N - it.pos)} núcleos (${fmt((100 * (N - it.pos)) / N)} % do total).
-    ${empate > 0 ? `Tem o mesmo índice que ${empate === 1 ? "outro núcleo" : `outros ${fmt(empate)}`}; no empate passa à frente quem tem mais demanda.` : ""}</p>
-    <h4>Vulnerabilidade: ${n.V} de 5, ${rel(n.V, media((x) => x.n.V))} (${fmt(media((x) => x.n.V), 1)})</h4>
-    <p>Somou ${fmt(n.pv * 100, 1)} pontos (peso ${fmt(PM.V * 100)} %). ${com.length ? `Contaram ponto: ${lista(com)}.` : "Nenhuma deficiência marcada."} ${sem.length ? `Não contaram: ${lista(sem)}.` : ""}</p>
-    <h4>Demanda: ${n.Dm} de 5, ${rel(n.Dm, media((x) => x.n.Dm))} (${fmt(media((x) => x.n.Dm), 1)})</h4>
-    <p>Somou ${fmt(n.pd * 100, 1)} pontos (peso ${fmt(PM.D * 100)} %). ${esc(def.demanda(p))}. Escala: ${def.faixas}.</p>
-    <h4>Município na rede urbana (REGIC 2018)</h4>
-    <p>${m ? `${esc(m.nome)} é <b>${esc(m.hierarquia)}</b> e se liga a ${esc(m.regiao_imediata)}. Importância ${fmt(n.R, 2)} de 1, que somou ${fmt(n.pr * 100, 1)} pontos (peso ${fmt(PM.R * 100)} %).` : "Sem dado do REGIC."}</p>
-    <h4>Comparação com os vizinhos no ranking</h4><ul>${viz(d.ordem[it.pos - 2], true)}${viz(d.ordem[it.pos], false)}</ul>
+    <p>${esc(p.nome)} (${esc(p.tipo)}, ${esc(p.municipio)}) ocupa a <b>${it.pos}ª posição</b> entre ${fmt(N)} candidatos a ${def.nome}, com índice de <b>${fmt(n.ip * 100, 1)}</b> em escala de 0 a 100, à frente de ${fmt(N - it.pos)} núcleos.
+    A posição é relativa e indica prioridade para estudo, não a viabilidade da implantação.
+    ${empate > 0 ? `O índice é idêntico ao de ${empate === 1 ? "outro núcleo" : `outros ${fmt(empate)} núcleos`}; pela regra de desempate, fica à frente o núcleo com maior demanda.` : ""}</p>
+    <h4>Vulnerabilidade de transporte</h4>
+    <p>O núcleo obteve nota ${n.V} de 5, ${rel(n.V, media((x) => x.n.V))}. ${com.length ? `A análise identificou: ${lista(com)}.` : "A análise não identificou condições desfavoráveis de acesso nas bases consultadas."}
+    ${sem.length ? `${sem.length === 1 ? "O indicador" : "Os indicadores"} ${lista(sem)} não ${sem.length === 1 ? "pontuou" : "pontuaram"}.` : ""}
+    Com peso de ${fmt(PM.V * 100)} %, o critério contribuiu com ${fmt(n.pv * 100, 1)} dos ${fmt(PM.V * 100, 1)} pontos possíveis.</p>
+    <h4>Demanda</h4>
+    <p>O núcleo obteve nota ${n.Dm} de 5, ${rel(n.Dm, media((x) => x.n.Dm))}. ${esc(def.demanda(p))}. A nota segue as faixas: ${def.faixas}.
+    Com peso de ${fmt(PM.D * 100)} %, o critério contribuiu com ${fmt(n.pd * 100, 1)} dos ${fmt(PM.D * 100, 1)} pontos possíveis.</p>
+    <h4>Importância do município na rede urbana (REGIC 2018)</h4>
+    <p>${m ? `${esc(m.nome)} é classificado como ${esc(m.hierarquia)} e integra a região de influência de ${esc(m.regiao_imediata)}. A importância calculada é ${fmt(n.R, 2)}, em escala de 0 a 1; com peso de ${fmt(PM.R * 100)} %, contribuiu com ${fmt(n.pr * 100, 1)} pontos. O valor é comum a todos os núcleos do município.` : "Não há dado do REGIC para o município."}</p>
+    <h4>Comparação com os núcleos vizinhos no ranking</h4><ul class="vizinhas">${viz(d.ordem[it.pos - 2], true)}${viz(d.ordem[it.pos], false)}</ul>
+    <p class="nota">${AVISO_ESTIMATIVA} Distâncias em linha reta; portos e terminais existentes vêm do OpenStreetMap e podem estar incompletos.</p>
   </div>`;
 }
 
@@ -166,7 +172,7 @@ function tabelaDistancias(p) {
     ["Rio largo ou lago (BC250)", p.dist_agua_km, p.agua], ["Atenção primária (CNES)", p.dist_prim_km, p.prim], ["Hospital (CNES)", p.dist_hosp_km, p.hosp],
     ["Aeródromo público (ANAC)", p.dist_aero_pub_km, p.aero_pub], ["Qualquer aeródromo (ANAC)", p.dist_aero_km, p.aero]];
   return `<table class="itens"><tbody>${l.map(([r, d, nome]) => `<tr><td>${r}${nome ? `<span class="ev">${esc(nome)}</span>` : ""}</td><td class="n">${kmf(d)}</td></tr>`).join("")}</tbody></table>
-    <p class="nota">Distâncias em linha reta. Por rio, o percurso real costuma ser bem maior.</p>`;
+    <p class="nota">Distâncias calculadas em linha reta. O percurso real, sobretudo fluvial, tende a ser maior.</p>`;
 }
 const listaSetores = (p) => `<p class="nota">Setores censitários do núcleo (${p.setores.length}): ${p.setores.map(esc).join(", ")}.</p>`;
 
@@ -176,10 +182,10 @@ function desenharFichaMod() {
   $("#ficha-conteudo").innerHTML = `
     <h2 class="ficha-tit">${esc(p.nome)}</h2>
     <p class="ficha-sub">${esc(p.tipo)}${p.indigena ? " · agrupamento indígena" : ""} · ${esc(p.municipio)} · ${fmt(p.pessoas)} pessoas · ${esc(def.extra(p))}</p>
-    <div class="placar"><span class="grande">${it.pos}º</span><span class="rot">de ${fmt(MOD.dados[it.k].ordem.length)} candidatos a ${def.nome}</span>
-      <span class="grande">${fmt(n.ip * 100, 1)}</span><span class="rot">índice (0–100)<br>vulnerabilidade ${fmt(n.pv * 100, 1)} + demanda ${fmt(n.pd * 100, 1)} + REGIC ${fmt(n.pr * 100, 1)}</span></div>
+    <div class="placar"><span class="grande">${it.pos}º</span><span class="rot">posição entre ${fmt(MOD.dados[it.k].ordem.length)} candidatos a ${def.nome}<br><small>1º = maior prioridade relativa</small></span>
+      <span class="grande">${fmt(n.ip * 100, 1)}</span><span class="rot">índice de prioridade, de 0 a 100<br>vulnerabilidade ${fmt(n.pv * 100, 1)} + demanda ${fmt(n.pd * 100, 1)} + REGIC ${fmt(n.pr * 100, 1)}</span></div>
     <div class="acoes"><button class="primario" data-acao="rel-item">Relatório deste núcleo</button><button data-acao="zoom">Aproximar no mapa</button></div>
-    ${subAbasMod([["notas", "Notas e distâncias"], ["porque", "Por que esta posição"]])}
+    ${subAbasMod([["notas", "Notas e distâncias"], ["porque", "Justificativa"]])}
     <div data-subpainel="porque" ${MOD.subFicha === "porque" ? "" : "hidden"}>${porQueMod(it)}</div>
     <div data-subpainel="notas" ${MOD.subFicha === "notas" ? "" : "hidden"}>
       <div class="crit"><h4>Vulnerabilidade</h4><span>${n.V} / 5</span></div>${tabelaItensMod(it)}
@@ -219,9 +225,9 @@ function relatorioMod(it) {
       <tr><td>Localização</td><td class="n">${fmt(p.lat, 5)}, ${fmt(p.lon, 5)}</td></tr>
     </tbody></table>
     <div class="rel-mapa" id="rel-mapa"></div>
-    <h2>Por que esta posição</h2>${porQueMod(it)}
-    <h2>Vulnerabilidade — ${n.V} de 5</h2>${tabelaItensMod(it)}
-    <h2>Distâncias</h2>${tabelaDistancias(p)}
+    <h2>Justificativa da classificação</h2>${porQueMod(it)}
+    <h2>Indicadores de vulnerabilidade — nota ${n.V} de 5</h2>${tabelaItensMod(it)}
+    <h2>Distâncias aos serviços e à infraestrutura</h2>${tabelaDistancias(p)}
     ${listaSetores(p)}
     <h2>Memória de cálculo</h2>
     <table><tbody>

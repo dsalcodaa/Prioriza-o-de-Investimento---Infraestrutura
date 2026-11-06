@@ -2,7 +2,7 @@
 
 Documento para quem continua o trabalho, pessoa ou agente. O `README.md` explica como rodar e quais são as fontes. Aqui ficam o objetivo, as decisões tomadas, o estado atual e o que falta.
 
-Última atualização: 05/11/2026.
+Última atualização: 06/11/2026.
 
 ## 1. Objetivo
 
@@ -77,7 +77,10 @@ scripts/processar_modulos.py  REGIC, núcleos, terminais, aeródromos, saúde �
 docs/index.html, style.css    interface
 docs/app.js                   mapa, ranking de ramais, fichas, pesos, relatórios
 docs/modulos.js               abas Terminais, Aeródromos, Saúde e cobertura, REGIC
+docs/textos.js                base editorial única: descrição de critérios e indicadores, natureza da informação, fontes e limitações
 ```
+
+Os textos da ficha, da aba Método e do relatório em PDF saem de `textos.js` e das funções de análise de `app.js`. Ao mudar um cálculo, revise o texto correspondente.
 
 Arquivos de entrada fora desta pasta, usados pelos scripts:
 
@@ -111,6 +114,8 @@ Ao mudar `app.js`, `modulos.js` ou `style.css`, aumente o `?v=` correspondente n
 - O REGIC tem peso pequeno de propósito: a prioridade segue a necessidade local, como recomendam o artigo e os bancos multilaterais.
 - Escolas vêm do CNEFE 2022 porque o catálogo do INEP bloqueia acesso automatizado. Não contornar o bloqueio.
 - Dados brutos (`data/`) não vão para o repositório.
+- Redação: português formal, técnico e acessível. Cada resultado explica o que foi avaliado, o que foi encontrado e como pesou no índice. Ausência de registro em base pública não é tratada como inexistência comprovada.
+- O relatório da via segue 10 seções: identificação; síntese; contexto territorial; transporte (V); desenvolvimento (D); projeto e execução (F); posição no ranking (com REGIC); sensibilidade e validação; memória metodológica; fontes e limitações.
 
 ## 7. Limitações e próximos passos
 
@@ -118,10 +123,11 @@ Ao mudar `app.js`, `modulos.js` ou `style.css`, aumente o `?v=` correspondente n
 2. **Portos e terminais incompletos.** O OpenStreetMap tem 367 pontos. Integrar o cadastro da SEINFRA, da ANTAQ e do DNIT (IP4).
 3. **Operador dos aeródromos.** A ANAC não informa se o aeródromo público é estadual ou municipal. Cruzar com o cadastro da SEINFRA.
 4. **Equipes de saúde.** Integrar o e-Gestor ou o CNES de equipes para saber quantas equipes cada unidade tem.
-5. **Nomes de comunidades.** Alguns nomes vindos do endereço das escolas no CNEFE são genéricos (por exemplo "Rio Andira", "Comunidade"). Revisar com o cadastro da SEINFRA ou em campo.
-6. **REGIC 2018.** Atualizar quando sair a versão baseada no Censo 2022. O shapefile de rotas do REGIC ainda não foi usado.
-7. **INCRA** estava fora do ar na coleta. Assentamentos vêm só de nomes no OpenStreetMap.
-8. **Várzea e igapó** são estimados pelo relevo. Confirmar por vistoria.
+5. **Assentamentos por nome.** A busca por termos como `pa ` no nome associa registros indevidos (exemplo: “Pousada SPA” no Ramal do Km 8 – AM-352). A plataforma sinaliza esses casos; a regra em `scripts/processar.py` (linha da lista `assent`) deve ser revista ou substituída pela base do INCRA.
+6. **Nomes de comunidades.** Alguns nomes vindos do endereço das escolas no CNEFE são genéricos (por exemplo "Rio Andira", "Comunidade"). Revisar com o cadastro da SEINFRA ou em campo.
+7. **REGIC 2018.** Atualizar quando sair a versão baseada no Censo 2022. O shapefile de rotas do REGIC ainda não foi usado.
+8. **INCRA** estava fora do ar na coleta. Assentamentos vêm só de nomes no OpenStreetMap.
+9. **Várzea e igapó** são estimados pelo relevo. Confirmar por vistoria.
 
 ## 8. Histórico
 
@@ -129,4 +135,5 @@ Ao mudar `app.js`, `modulos.js` ou `style.css`, aumente o `?v=` correspondente n
 - 05/11/2026: primeira versão da plataforma (ramais e rodovias, AHP, fichas, relatórios).
 - 05/11/2026: troca para o traçado de ramais da SEINFRA (REV06), população por setor rateada pelo CNEFE, escolas e saúde (CNES e CNEFE), drenagem do BC250.
 - 05/11/2026: módulos de Terminais, Aeródromos, Saúde e cobertura e REGIC; explicação da posição de cada item; peso REGIC nos ramais.
+- 06/11/2026: reformulação editorial da plataforma e do relatório em PDF (base `textos.js`, natureza de cada informação, alerta de possível inconsistência no indicador de assentamento). Cálculos e ranking inalterados.
 - 05/11/2026: correções na aba Terminais (numeração da lista filtrada, camadas dos ramais ocultas fora da aba, manchas urbanas isoladas).

@@ -8,14 +8,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 <div id="app">
   <aside id="painel" aria-label="Painel de priorização">
     <header class="marca">
       <h1>Priorização de obras de infraestrutura <span>Amazonas</span></h1>
-      <p>Ramais, rodovias, terminais hidroviários e aeródromos ordenados por análise multicritério (AHP), com dados da SEINFRA-AM, IBGE (Censo 2022, CNEFE, BC250, REGIC 2018), CNES, ANAC, INPE, IPHAN, OpenStreetMap e relevo SRTM.</p>
+      <p>Estudo de priorização de investimentos em ramais, rodovias estaduais, terminais hidroviários e aeródromos, por análise multicritério (AHP). Combina o cadastro da SEINFRA-AM com bases do IBGE (Censo 2022, CNEFE, BC250, REGIC 2018), CNES, ANAC, INPE, IPHAN, OpenStreetMap e relevo SRTM. Os resultados são estimativas e devem ser validados em campo.</p>
     </header>
     <nav class="modulos" aria-label="Módulos">
       <button data-mod="ramais" aria-pressed="true">Ramais e rodovias</button>
@@ -50,7 +50,7 @@
     </section>
 
     <section id="aba-pesos" class="aba" role="tabpanel" hidden>
-      <p class="nota">Compare os critérios dois a dois na escala de Saaty. Os pesos padrão são os do artigo (0,648 / 0,230 / 0,122).</p>
+      <p class="nota">Os pesos dos critérios são obtidos pelo método AHP a partir de comparações pareadas. Para cada par, indique qual critério é mais importante e em que intensidade, de 1 (igual importância) a 9 (importância extrema). Os valores padrão reproduzem os julgamentos do artigo de referência e resultam nos pesos 0,648, 0,230 e 0,122. As alterações valem apenas neste navegador.</p>
       <div id="pares"></div>
       <table class="pesos" aria-label="Pesos resultantes">
         <thead><tr><th>Critério</th><th>Peso</th></tr></thead>
@@ -59,10 +59,10 @@
       <p id="cr" class="cr"></p>
       <button id="btn-reset-pesos">Voltar aos pesos do artigo</button>
       <h3>Importância do município (REGIC 2018)</h3>
-      <p class="nota">Parte do índice dada à posição do município na rede urbana do IBGE. Com 0 % o ranking segue só o artigo.</p>
+      <p class="nota">Define a parcela r do índice atribuída à importância do município na rede urbana (REGIC 2018, IBGE). Os demais critérios são multiplicados por (1 − r). Com 0 %, o ranking reproduz o modelo do artigo de referência.</p>
       <div class="deslizador"><input type="range" id="rpeso" min="0" max="30" step="5" aria-label="Peso do REGIC"> <b id="rpeso-val"></b></div>
       <h3>Ajustes de campo</h3>
-      <p class="nota">As notas automáticas são estimativas a partir de bases públicas. Corrija na ficha de cada via após a vistoria. Os ajustes ficam salvos neste navegador.</p>
+      <p class="nota">Os indicadores calculados automaticamente são estimativas obtidas de bases públicas. Após a vistoria, corrija os valores na ficha de cada via: o índice e o ranking são recalculados imediatamente. Os ajustes ficam salvos neste navegador e podem ser exportados e importados em arquivo JSON.</p>
       <div class="acoes">
         <button id="btn-export">Baixar ajustes (JSON)</button>
         <label class="botao-arquivo">Importar ajustes<input type="file" id="imp" accept="application/json"></label>
@@ -87,27 +87,14 @@
         <label><input type="checkbox" data-camada="municipios" checked> <i class="sw sw-mun"></i> Municípios (IBGE)</label>
       </fieldset>
       <div class="legenda">
-        <p>Cor da via = prioridade no ranking atual</p>
+        <p>Cor da via: faixa de prioridade no ranking atual (10 %, 25 %, 50 % e 75 % de maior prioridade)</p>
         <div class="rampa"><span>maior</span><i></i><span>menor</span></div>
       </div>
       <p class="nota" id="meta"></p>
     </section>
 
     <section id="aba-metodo" class="aba" role="tabpanel" hidden>
-      <div class="metodo">
-        <p>Modelo do artigo <cite>Modelo de Priorização de Obras de Infraestrutura de Rodovias e Vicinais para o Estado do Amazonas com base em Análise Multicritério</cite> (UNINORTE, 2023), com as correções da revisão.</p>
-        <p><b>Índice de prioridade</b> = w<sub>V</sub>·V/5 + w<sub>D</sub>·D/10 + w<sub>F</sub>·(1 − F/10)</p>
-        <dl>
-          <dt>V · Vulnerabilidade de transporte (0–5)</dt>
-          <dd>Um ponto por deficiência: sem porto ou aeroporto a até 10 km; sem rota alternativa; maior parte sem pavimento; travessia de rio (IBGE BC250) sem ponte mapeada ou ponte de madeira; sem escola (IBGE CNEFE 2022) ou unidade de saúde (CNES e CNEFE) a até 2 km.</dd>
-          <dt>D · Desenvolvimento local (0–10)</dt>
-          <dd>Uso do solo (0–5: comunidade, assentamento, agricultura, turismo, indústria/extrativismo) + nível de ocupação (média das notas de população do Censo 2022 num raio de 2 km e de nº de entroncamentos). A população de cada setor censitário entra pela fração dos seus domicílios (endereços do CNEFE 2022) que fica a até 2 km da via.</dd>
-          <dt>F · Dificuldade de projeto e execução (0–10)</dt>
-          <dd>Relevo (SRTM: &lt;60 m = 1; 60–120 m = 2; ≥120 m = 3), terreno (terra firme 0, várzea 1, igapó 2; várzea estimada por altitude média ≤ 30 m a até 2 km de rio; igapó só por vistoria), unidade de conservação, sítio arqueológico a até 1 km, terra indígena, obras de arte especiais (0 nenhuma, 1 possui, 2 ponte precisa de intervenção, 3 precisa implantar; igarapés menores contam como bueiro). Entra invertido: mais difícil reduz a prioridade.</dd>
-        </dl>
-        <p><b>REGIC</b>: o índice final é (1 − r) × índice do artigo + r × importância do município na rede urbana (REGIC 2018, de 0 a 1). O peso r vai de 0 a 30 % na aba Pesos AHP (padrão 15 %).</p>
-        <p class="nota">Itens marcados como estimativa (assentamento, terreno, agricultura, população por setor) devem ser confirmados em campo. O INCRA estava fora do ar na coleta, então assentamentos vêm só de nomes no OpenStreetMap.</p>
-      </div>
+      <div class="metodo" id="metodo-conteudo"></div>
     </section>
     </div>
     <div class="mod" id="mod-terminais" data-ranking="terminais" hidden><h2 class="mod-tit">Onde implantar terminais flutuantes</h2><div class="aba" id="corpo-terminais"><p class="nota">Carregando…</p></div></div>
@@ -133,7 +120,8 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="app.js?v=6"></script>
-<script src="modulos.js?v=5"></script>
+<script src="textos.js?v=1"></script>
+<script src="app.js?v=7"></script>
+<script src="modulos.js?v=6"></script>
 </body>
 </html>
