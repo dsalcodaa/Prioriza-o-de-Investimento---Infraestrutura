@@ -700,16 +700,18 @@ function relatorioPerfis() {
 }
 
 /* ---------- ranking por população atendida ---------- */
-// pessoas dos setores censitários cruzados pelo traçado; empate: melhor posição no ranking oficial
+// só ramais e estradas vicinais (rodovias estaduais ficam fora); pessoas dos setores censitários cruzados pelo traçado;
+// empate: melhor posição no ranking oficial
+const ehRamal = (v) => !v.p.tipo.startsWith("Rodovia");
 const ordemPop = (lista) => lista.sort((a, b) => b.p.pop_setores - a.p.pop_setores || a.pos - b.pos);
 function linhasPop() {
   const mun = $("#p-mun").value;
-  return ordemPop(VIAS.filter((v) => !mun || v.p.municipio === mun));
+  return ordemPop(VIAS.filter((v) => ehRamal(v) && (!mun || v.p.municipio === mun)));
 }
 function desenharPop() {
-  ordemPop([...VIAS]).forEach((v, i) => (v.posPop = i + 1));
+  ordemPop(VIAS.filter(ehRamal)).forEach((v, i) => (v.posPop = i + 1));
   const ls = linhasPop();
-  $("#pop-tabela").innerHTML = `<p class="nota">${fmt(ls.length)} vias. Clique numa via para abrir a ficha.</p>
+  $("#pop-tabela").innerHTML = `<p class="nota">${fmt(ls.length)} ramais e estradas vicinais. Clique numa via para abrir a ficha.</p>
     <table class="geral"><thead><tr><th>Posição</th><th>Via</th><th>Pessoas atendidas</th><th>Setores cruzados</th><th>Ranking oficial</th></tr></thead><tbody>
     ${ls.map((v) => `<tr data-id="${esc(v.p.id)}"><td class="forte">${v.posPop}º</td><td>${esc(v.p.nome)}<br><small>${esc(v.p.municipio)}</small></td><td>${fmt(v.p.pop_setores)}</td><td>${fmt(v.p.n_setores_cruzados)}</td><td>${v.pos}º</td></tr>`).join("")}
     </tbody></table>`;
@@ -717,9 +719,9 @@ function desenharPop() {
 function relatorioPop() {
   const ls = linhasPop(), mun = $("#p-mun").value;
   abrirRelatorio(`
-    <h1>Ranking de ramais e rodovias por população atendida</h1>
-    <p class="cab">Amazonas · ${mun ? esc(mun) : "todos os municípios"} · ${fmt(ls.length)} vias · emitido em ${new Date().toLocaleDateString("pt-BR")}</p>
-    <p>As vias estão ordenadas pela quantidade de pessoas que atendem, medida pela soma dos moradores (Censo 2022) dos setores censitários cruzados pelo traçado; se o traçado não cruzar setor habitado, entram os setores a até 2 km. Em caso de empate, vem primeiro a via mais bem posicionada no ranking oficial.
+    <h1>Ranking de ramais e estradas vicinais por população atendida</h1>
+    <p class="cab">Amazonas · ${mun ? esc(mun) : "todos os municípios"} · ${fmt(ls.length)} ramais e estradas vicinais · emitido em ${new Date().toLocaleDateString("pt-BR")}</p>
+    <p>Os ramais e estradas vicinais do cadastro da SEINFRA-AM estão ordenados pela quantidade de pessoas que atendem; as rodovias estaduais não entram nesta ordem. A quantidade é a soma dos moradores (Censo 2022) dos setores censitários cruzados pelo traçado; se o traçado não cruzar setor habitado, entram os setores a até 2 km. Em caso de empate, vem primeiro a via mais bem posicionada no ranking oficial, que reúne as ${fmt(ordem.length)} vias avaliadas, rodovias incluídas.
     Esta ordem não considera vulnerabilidade, desenvolvimento nem dificuldade de execução. A posição no ranking oficial, que combina esses critérios pelo método AHP do artigo de referência, aparece para comparação.</p>
     <p class="aviso">${AVISO_ESTIMATIVA} O setor censitário rural pode ser extenso: parte dos moradores somados pode residir longe do traçado.</p>
     <table class="rel-larga"><thead><tr><th class="n">Posição</th><th>Via</th><th>Município</th><th class="n">Extensão (km)</th><th class="n">Pessoas atendidas</th><th class="n">Setores cruzados</th><th class="n">Pessoas por km</th><th class="n">Ranking oficial</th></tr></thead><tbody>

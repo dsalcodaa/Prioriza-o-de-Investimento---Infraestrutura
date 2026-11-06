@@ -166,7 +166,7 @@ function porQueMod(it) {
     <h4>Importância do município na rede urbana (REGIC 2018)</h4>
     <p>${m ? `${esc(m.nome)} é classificado como ${esc(m.hierarquia)} e integra a região de influência de ${esc(m.regiao_imediata)}. A importância calculada é ${fmt(n.R, 2)}, em escala de 0 a 1; com peso de ${fmt(PM.R * 100)} %, contribuiu com ${fmt(n.pr * 100, 1)} pontos. O valor é comum a todos os núcleos do município.` : "Não há dado do REGIC para o município."}</p>
     <h4>Comparação com os núcleos vizinhos no ranking</h4><ul class="vizinhas">${viz(d.ordem[it.pos - 2], true)}${viz(d.ordem[it.pos], false)}</ul>
-    <p class="nota">${AVISO_ESTIMATIVA} Distâncias em linha reta; portos e terminais existentes vêm do OpenStreetMap e podem estar incompletos.</p>
+    <p class="nota">${AVISO_ESTIMATIVA} Distâncias em linha reta; portos e terminais existentes vêm do OpenStreetMap e do cadastro da SEINFRA-AM e podem estar incompletos.</p>
   </div>`;
 }
 
@@ -219,11 +219,54 @@ const FONTES_MOD = `IBGE — setores, aglomerados e população do Censo 2022, C
   Ministério da Saúde — CNES; ANAC — cadastro de aeródromos públicos e privados; OpenStreetMap — portos e terminais;
   SEINFRA-AM — traçado dos ramais.`;
 
+// resumo executivo do terminal (leitura rápida para gestores)
+function resumoTerminal(it) {
+  const p = it.p, n = it.n, def = DEF.terminais, d = MOD.dados.terminais, N = d.ordem.length, m = REGIC[p.cod_mun];
+  const posPop = 1 + d.ordem.filter((x) => x.p.pessoas > p.pessoas).length;
+  const com = def.itens.filter(([c]) => p.vul[c]).map(([, r]) => r.charAt(0).toLowerCase() + r.slice(1));
+  const partes = [["a vulnerabilidade de transporte", n.pv], ["a demanda (moradores do núcleo)", n.pd], ["a importância do município na rede urbana (REGIC)", n.pr]].sort((a, b) => b[1] - a[1]);
+  const caixa = (r, val, det) => `<div><span>${r}</span><b>${val}</b><small>${det}</small></div>`;
+  return `<section class="resumo-exec">
+    <h2>Resumo executivo</h2>
+    <p class="lead"><b>${esc(p.nome)}</b>, em ${esc(p.municipio)}, está na <b>${it.pos}ª posição</b> entre ${fmt(N)} locais candidatos a terminal flutuante no Amazonas, na faixa ${FAIXAS[corPorPosicao(it.pos - 1, N)]}. Os locais que já têm terminal a até 2 km não entram nesta lista.</p>
+    <div class="exec-num">
+      ${caixa("Posição no ranking", `${it.pos}ª de ${fmt(N)}`, `Índice de prioridade ${fmt(n.ip * 100, 1)} (0 a 100)`)}
+      ${caixa("Pessoas atendidas", fmt(p.pessoas), `Moradores do núcleo (Censo 2022), em ${fmt(p.domicilios)} domicílios. ${posPop}ª posição por população.`)}
+      ${caixa("Terminal ou porto mais próximo", kmf(p.dist_porto_km), !p.porto ? "Nenhum registrado nas bases consultadas" : /^\(?sem nome\)?$/i.test(p.porto) ? "Ponto sem nome no OpenStreetMap" : esc(p.porto))}
+      ${caixa("Distância à sede municipal", kmf(p.dist_sede_km), p.tipo === "sede municipal" ? "O núcleo é a sede do município" : "Em linha reta, até a cidade sede")}
+      ${caixa("Atenção primária à saúde", kmf(p.dist_prim_km), `Unidade mais próxima: ${esc(p.prim)}`)}
+      ${caixa("Acesso por estrada", kmf(p.dist_via_km), "Distância até a via terrestre registrada mais próxima")}
+    </div>
+    <h3>Por que está nesta posição</h3>
+    <ul>
+      <li>O que mais pesou foi ${partes[0][0]}: ${fmt(partes[0][1] * 100, 1)} dos ${fmt(n.ip * 100, 1)} pontos. Em seguida, ${partes[1][0]}, com ${fmt(partes[1][1] * 100, 1)} pontos.</li>
+      <li>${com.length ? `Problemas de acesso identificados (${n.V} de 5): ${lista(com)}.` : "Não foram identificados problemas de acesso nas bases consultadas, o que reduz a prioridade."}</li>
+      <li>Demanda: nota ${n.Dm} de 5, com ${fmt(p.pessoas)} moradores no núcleo.</li>
+    </ul>
+    <h3>Situação em cada tema</h3>
+    <ul>
+      <li><b>Transporte:</b> ${p.vul.sem_terminal ? "sem porto ou terminal a até 5 km" : `há porto ou terminal a ${kmf(p.dist_porto_km)}`}; ${p.vul.sem_via ? "sem acesso por estrada (via a mais de 2 km)" : "com via terrestre a até 2 km"}.</li>
+      <li><b>Localização:</b> à margem de ${esc(p.agua || "rio ou lago sem nome no BC250")}, a ${fmt(p.dist_agua_km * 1000)} m da água; ${p.vul.longe_sede ? "a mais de 30 km da sede" : "a até 30 km da sede"}.</li>
+      <li><b>Saúde:</b> ${p.vul.sem_saude ? "sem atenção primária a até 5 km" : "com atenção primária a até 5 km"}; hospital mais próximo a ${kmf(p.dist_hosp_km)} (${esc(p.hosp)}).</li>
+      <li><b>Rede urbana:</b> ${m ? `${esc(m.nome)} é ${esc(m.hierarquia)} no REGIC 2018; o componente somou ${fmt(n.pr * 100, 1)} pontos.` : "não há dado do REGIC para o município."}</li>
+    </ul>
+    <h3>Antes de decidir</h3>
+    <ul>
+      <li>Confirmar em campo que não há terminal ou porto em operação no local: as bases de portos (OpenStreetMap e cadastro da SEINFRA-AM) podem estar incompletas.</li>
+      <li>Verificar profundidade na seca, variação do nível do rio, margem e acesso do núcleo ao ponto de atracação.</li>
+      <li>Distâncias em linha reta; o percurso real pelo rio pode ser maior.</li>
+      <li>A plataforma não tem custo de referência para terminal flutuante; o valor depende do projeto.</li>
+    </ul>
+    <p class="nota">As páginas seguintes trazem o detalhamento técnico de cada informação deste resumo.</p>
+  </section>`;
+}
+
 function relatorioMod(it) {
   const p = it.p, n = it.n, def = DEF[it.k];
   abrirRelatorio(`
     <h1>${esc(p.nome)}</h1>
     <p class="cab">Candidato a ${def.nome} · ${esc(p.tipo)} · ${esc(p.municipio)}/AM · relatório gerado em ${new Date().toLocaleDateString("pt-BR")}</p>
+    ${it.k === "terminais" ? `${resumoTerminal(it)}<h2>Detalhamento técnico</h2><p class="aviso">${AVISO_ESTIMATIVA}</p>` : ""}
     <table><tbody>
       <tr><td>Posição no ranking</td><td class="n"><b>${it.pos}º de ${fmt(MOD.dados[it.k].ordem.length)}</b></td></tr>
       <tr><td>Índice (0–100)</td><td class="n"><b>${fmt(n.ip * 100, 1)}</b></td></tr>

@@ -53,7 +53,7 @@ Mostra, para cada via, a posição no ranking oficial e em três perfis de decis
 
 ### Ranking por população
 
-- Ramais e rodovias (aba Por população): ordem pelas pessoas dos setores censitários cruzados pelo traçado (`pop_setores`), empate pela posição oficial. Tabela imprimível com pessoas por km.
+- Aba Por população: só ramais e estradas vicinais do cadastro da SEINFRA (905); as 13 rodovias estaduais ficam fora. Ordem pelas pessoas dos setores censitários cruzados pelo traçado (`pop_setores`), empate pela posição oficial (que segue com as 918 vias). Tabela imprimível com pessoas por km.
 - Terminais: seletor "Ordenar por população atendida" no módulo (moradores do núcleo). O relatório do módulo segue a ordem escolhida.
 
 ### Terminais flutuantes e aeródromos
@@ -147,6 +147,11 @@ Ao mudar `app.js`, `modulos.js` ou `style.css`, aumente o `?v=` correspondente n
 - Premissa de pavimento e pontes (06/11/2026): ramal com obra na coluna Situação do REV06 (CONCLUÍDO ou EM OBRA, 63 ramais) é considerado pavimentado; os demais (OBRA EXTINTA incluída) ficam em leito natural e sem ponte em nenhuma travessia de rio. A ficha tem o bloco Vistoria de campo para registrar pavimento e pontes constatados; o registro substitui a premissa.
 - Redação: português formal, técnico e acessível. Cada resultado explica o que foi avaliado, o que foi encontrado e como pesou no índice. Ausência de registro em base pública não é tratada como inexistência comprovada.
 - O relatório da via abre com um **resumo executivo** de uma página e meia para secretário e governador: posição e motivo, pessoas atendidas (setores cruzados e entorno de 2 km), custo do cadastro (R$ 2.500.000 por km em todo o cadastro), nível de dificuldade (0 a 3 baixa, 4 a 6 média, 7 a 10 alta), robustez nos 4 cenários, situação de cada tema, sensibilidade e o que confirmar em vistoria. O texto do relatório é justificado e a explicação de critérios e indicadores aparece em caixa "Como funciona".
+- O relatório do terminal flutuante segue a mesma lógica:
+  - resumo executivo em 1 página, com 6 cards: posição, pessoas atendidas (com posição por população), terminal ou porto mais próximo, distância à sede, atenção primária e acesso por estrada;
+  - depois: por que está na posição, situação por tema e o que verificar antes de decidir (terminal em operação, profundidade na seca, margem);
+  - em seguida, o "Detalhamento técnico": tabela, mapa, justificativa, indicadores, distâncias e memória de cálculo.
+  - Não há custo de referência para terminal.
 - Depois do resumo, o relatório da via segue 10 seções: identificação; síntese; contexto territorial; transporte (V); desenvolvimento (D); projeto e execução (F); posição no ranking (com REGIC); sensibilidade e validação; memória metodológica; fontes e limitações.
 
 ## 7. Limitações e próximos passos
@@ -200,3 +205,4 @@ Simulações pedidas pelo usuário para comparar com o modelo atual antes de dec
 - 06/11/2026: aba Ranking geral (ranking oficial + perfis Necessidade, Benefício social e Escoamento da produção, coluna Cenários, tabela imprimível); população por setores cruzados; produção pelo CNEFE (`data/raw/ibge_cnefe_producao_AM.json`); vistoria de produção. Ranking oficial inalterado.
 - 06/11/2026: aba Por população (ramais), ordenação por população nos terminais, botão Camadas no mapa (todas as camadas, em qualquer módulo), terminais flutuantes da SEINFRA como camada e retirada do ranking dos locais que já têm terminal.
 - 06/11/2026: resumo executivo no relatório da via, texto justificado e caixas "Como funciona"; `../Relatorio_Ramal_Km8_AM-352.pdf` regerado.
+- 06/11/2026: aba Por população só com ramais e estradas vicinais; relatório do terminal flutuante com resumo executivo em cards e depois o detalhamento técnico.
