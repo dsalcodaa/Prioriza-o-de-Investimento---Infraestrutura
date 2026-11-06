@@ -137,6 +137,24 @@ if not ja_tem("ibge_cnefe_AM.json"):
     salvar("ibge_cnefe_AM.json", {"celula_graus": 0.002, "dom": dom, "escolas": esc, "saude": sau, "agro": agro})
     print("ok ibge_cnefe_AM.json", len(dom), "setores com domicílios;", len(esc), "escolas;", len(sau), "saúde;", len(agro), "agropecuários")
 
+if not ja_tem("ibge_cnefe_producao_AM.json"):
+    # Produção agropecuária no CNEFE 2022: todo estabelecimento agropecuário (espécie 3) e os endereços de outras
+    # finalidades (espécie 6) cujo nome indica produção, como fazenda, sítio, granja, curral ou casa de farinha.
+    import zipfile, io, csv, re
+    PROD = re.compile(r"^(FAZENDA|SITIO|CHACARA|GRANJA|ROCADO|ROCAS?|AVIARIO|PISCICULTURA|CURRAL|PLANTACAO|PLANTIO|"
+                      r"CRIACAO|CULTIVO|AGRICULTURA|HORTA|CASA DE FARINHA|VIVEIRO)")
+    z = zipfile.ZipFile(RAW / "cnefe_13_AM.zip")
+    prod = []
+    for l in csv.DictReader(io.TextIOWrapper(z.open(z.namelist()[0]), encoding="utf-8"), delimiter=";"):
+        esp, nome = l["COD_ESPECIE"], (l["DSC_ESTABELECIMENTO"] or "").strip().upper()
+        if esp == "3" or (esp == "6" and PROD.match(nome)):
+            try:
+                prod.append([round(float(l["LATITUDE"]), 5), round(float(l["LONGITUDE"]), 5), esp, nome])
+            except ValueError:
+                continue
+    salvar("ibge_cnefe_producao_AM.json", prod)
+    print("ok ibge_cnefe_producao_AM.json", len(prod), "endereços de produção")
+
 if not ja_tem("cnes_AM.json"):
     # CNES (Ministério da Saúde): estabelecimentos de saúde do AM com coordenadas; a API devolve 20 por página
     lista, off = [], 0

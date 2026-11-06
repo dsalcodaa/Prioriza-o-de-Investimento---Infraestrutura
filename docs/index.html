@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 <div id="app">
@@ -27,6 +27,7 @@
     <div class="mod" id="mod-ramais">
     <nav class="abas" role="tablist">
       <button role="tab" aria-selected="true" data-aba="ranking">Ranking</button>
+      <button role="tab" aria-selected="false" data-aba="geral">Ranking geral</button>
       <button role="tab" aria-selected="false" data-aba="pesos">Pesos AHP</button>
       <button role="tab" aria-selected="false" data-aba="camadas">Camadas</button>
       <button role="tab" aria-selected="false" data-aba="metodo">Método</button>
@@ -47,6 +48,19 @@
         <button id="btn-rel-geral" class="primario">Relatório geral do ranking</button>
         <button id="btn-csv">Baixar ranking (CSV)</button>
       </div>
+    </section>
+
+    <section id="aba-geral" class="aba" role="tabpanel" hidden>
+      <p class="nota">Esta aba apresenta, para cada via, a posição no ranking oficial e a posição em três perfis de decisão. O ranking oficial segue o método do artigo de referência, com o peso REGIC definido na aba Pesos AHP. Cada perfil responde a uma pergunta: <b>Necessidade</b> prioriza a vulnerabilidade de transporte; <b>Benefício social</b>, a população dos setores censitários cruzados pela via; <b>Escoamento da produção</b>, os endereços de produção agropecuária a até 1 km da via. A coluna Cenários indica em quantos dos quatro rankings a via está entre as 100 primeiras: quanto maior, mais robusta a prioridade.</p>
+      <div class="geral-ctl">
+        <label>Ordenar por <select id="g-ordem">
+          <option value="oficial">Ranking oficial</option><option value="nec">Necessidade</option><option value="soc">Benefício social</option>
+          <option value="esc">Escoamento da produção</option><option value="rob">Cenários entre as 100 primeiras</option></select></label>
+        <label>Município <select id="g-mun"><option value="">Todos os municípios</option></select></label>
+      </div>
+      <div class="acoes"><button id="btn-geral-imp" class="primario">Imprimir tabela</button></div>
+      <div id="geral-tabela"></div>
+      <details class="nota"><summary>Como os perfis são calculados</summary><div id="geral-metodo"></div></details>
     </section>
 
     <section id="aba-pesos" class="aba" role="tabpanel" hidden>
@@ -121,7 +135,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="textos.js?v=2"></script>
-<script src="app.js?v=8"></script>
+<script src="app.js?v=10"></script>
 <script src="modulos.js?v=6"></script>
 </body>
 </html>

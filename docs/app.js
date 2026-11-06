@@ -84,7 +84,9 @@ function recalcular() {
   VIAS.forEach((v) => (v.n = notas(v.p)));
   ordem = [...VIAS].sort((a, b) => (b.n.ip - a.n.ip) || (b.p.pop - a.p.pop)); // empate: mais população no entorno primeiro
   ordem.forEach((v, i) => (v.pos = i + 1));
+  calcularPerfis();
   filtrar();
+  desenharGeral();
   desenharMetodo();
 }
 
@@ -187,7 +189,7 @@ async function iniciar() {
     return;
   }
   [...new Set(VIAS.map((v) => v.p.municipio))].sort((a, b) => a.localeCompare(b, "pt")).forEach((m) =>
-    $("#f-mun").insertAdjacentHTML("beforeend", `<option>${esc(m)}</option>`));
+    ["#f-mun", "#g-mun"].forEach((s) => $(s).insertAdjacentHTML("beforeend", `<option>${esc(m)}</option>`)));
   $("#meta").textContent = `Dados gerados em ${META.gerado_em}: ${fmt(META.n_vias)} vias, ${fmt(META.n_aeroportos)} aeroportos e pistas, ${fmt(META.n_portos)} portos, ${fmt(META.n_sitios)} sítios arqueológicos, ${fmt(META.n_ucs)} unidades de conservação, ${fmt(META.n_tis)} terras indígenas, ${fmt(META.n_setores)} setores censitários.`;
   montarPares();
   recalcular();
@@ -229,7 +231,8 @@ const plural = (n, s, p) => `${fmt(n)} ${n === 1 ? s : p}`;
 const NADA = "Não foram identificados registros nas bases consultadas.";
 const parteIndice = (l) => (l === "R" ? RPESO : (1 - RPESO) * W[l]); // fração do índice que o critério pode somar
 const PREMISSA = { rev: ["vul.trafegabilidade_ruim"], ponte: ["vul.infra_acesso_deficiente", "dif.oae"] };
-const vistoriado = (p, c) => Object.entries(ajustes[p.id]?._vist || {}).some(([k, x]) => x && PREMISSA[k].includes(c));
+const VCHAVES = { ...PREMISSA, agro: ["uso.agricola"] };
+const vistoriado = (p, c) => Object.entries(ajustes[p.id]?._vist || {}).some(([k, x]) => x != null && x !== "" && VCHAVES[k]?.includes(c));
 const origemDe = (p, c) => (valor(p, c) !== auto(p, c) || vistoriado(p, c) ? "campo" : p.seinfra && Object.values(PREMISSA).flat().includes(c) ? "prem" : IND[c].origem);
 function selo(p, c) {
   const o = origemDe(p, c), [r, t] = ORIGEM[o];
@@ -503,7 +506,9 @@ function blocoVistoria(p) {
     <p class="nota">Registre o que a vistoria constatou. O registro substitui a premissa do estudo e o índice é recalculado na hora. Os registros ficam salvos neste navegador e podem ser exportados na aba Pesos AHP.</p>
     <label>Revestimento <select data-vistoria="rev">${op("rev", "", `Não vistoriado (premissa: ${prem})`)}${op("rev", "pav", "Vistoria atesta pavimento na maior parte da extensão")}${op("rev", "leito", "Vistoria atesta leito natural ou revestimento primário")}</select></label>
     ${rios > 0 ? `<label>Pontes (${plural(rios, "travessia de rio", "travessias de rio")}) <select data-vistoria="ponte">${op("ponte", "", `Não vistoriado (premissa: ${p.seinfra && !p.seinfra.obra ? "sem ponte" : "pontes registradas nas bases"})`)}${op("ponte", "com", "Vistoria atesta ponte adequada em todas as travessias")}${op("ponte", "madeira", "Vistoria atesta ponte de madeira")}${op("ponte", "sem", "Vistoria atesta travessia sem ponte")}</select></label>`
-      : '<p class="nota">Não foram identificadas travessias de rio no traçado; o registro de pontes não se aplica.</p>'}</div>`;
+      : '<p class="nota">Não foram identificadas travessias de rio no traçado; o registro de pontes não se aplica.</p>'}
+    <label>Produção agropecuária a até 1 km (propriedades produtivas) <input type="number" min="0" step="1" data-vistoria="agro" value="${vs.agro ?? ""}" placeholder="Não vistoriado (CNEFE: ${plural(p.producao, "endereço de produção", "endereços de produção")})"></label>
+    <p class="nota">Informe o número de propriedades produtivas constatadas. Deixe vazio para usar o CNEFE. O valor informado substitui a contagem do CNEFE no perfil Escoamento da produção e define o item de atividade agropecuária do Desenvolvimento (1 se houver produção, 0 se não houver).</p></div>`;
 }
 
 function subAbas(lista) {
@@ -617,6 +622,75 @@ function desenharMetodo() {
     <h2>Critérios e indicadores</h2>${criteriosMetodo()}
     <h2>Como os critérios são combinados</h2>${memoriaMetodologica()}
     <h2>Fontes e limitações</h2>${fontesLimitacoes()}`;
+}
+
+/* ---------- ranking geral: ranking oficial e três perfis de decisão ---------- */
+// Cada perfil é um AHP com quatro critérios (vulnerabilidade, população, produção, facilidade). O critério dominante
+// vale 3 vezes cada um dos outros dois e 5 vezes a facilidade; os outros dois são iguais entre si e valem 2 vezes a facilidade.
+const PERFIS = { nec: ["Necessidade", 0], soc: ["Benefício social", 1], esc: ["Escoamento da produção", 2] };
+const TOPO = 100;
+function pesosPerfil(d) {
+  const A = [0, 1, 2, 3].map((i) => [0, 1, 2, 3].map((j) => (i === j ? 1 : i === d ? (j === 3 ? 5 : 3) : j === d ? (i === 3 ? 1 / 5 : 1 / 3) : i === 3 ? 1 / 2 : j === 3 ? 2 : 1)));
+  const Aw = (w) => A.map((l) => l.reduce((s, a, j) => s + a * w[j], 0));
+  let w = [0.25, 0.25, 0.25, 0.25];
+  for (let k = 0; k < 100; k++) { const x = Aw(w), t = x.reduce((a, b) => a + b); w = x.map((y) => y / t); }
+  const lmax = Aw(w).reduce((s, y, i) => s + y / w[i], 0) / 4;
+  return { w, cr: (lmax - 4) / 3 / 0.9 };
+}
+const PESOS_PERFIL = Object.fromEntries(Object.entries(PERFIS).map(([k, [, d]]) => [k, pesosPerfil(d)]));
+const prodDe = (p) => ajustes[p.id]?._vist?.agro ?? p.producao;
+const p99 = (xs) => { const s = [...xs].sort((a, b) => a - b); return s[Math.floor(0.99 * (s.length - 1))] || 1; };
+let CAP = null, gOrdem = "oficial";
+function calcularPerfis() {
+  CAP = CAP || { pop: p99(VIAS.map((v) => v.p.pop_setores)), prod: p99(VIAS.map((v) => v.p.producao)) };
+  const lg = (x, c) => Math.min(1, Math.log1p(x) / Math.log1p(c)); // escala logarítmica, teto no percentil 99
+  VIAS.forEach((v) => { v.crit = [v.n.V / 5, lg(v.p.pop_setores, CAP.pop), lg(prodDe(v.p), CAP.prod), 1 - v.n.F / 10]; v.perf = {}; v.posp = {}; });
+  Object.keys(PERFIS).forEach((k) => {
+    const w = PESOS_PERFIL[k].w;
+    VIAS.forEach((v) => (v.perf[k] = v.crit.reduce((s, x, i) => s + x * w[i], 0)));
+    [...VIAS].sort((a, b) => (b.perf[k] - a.perf[k]) || (b.p.pop_setores - a.p.pop_setores)).forEach((v, i) => (v.posp[k] = i + 1));
+  });
+  VIAS.forEach((v) => (v.rob = [v.pos, ...Object.values(v.posp)].filter((x) => x <= TOPO).length));
+}
+function linhasGeral() {
+  const mun = $("#g-mun").value, k = gOrdem;
+  const chave = (v) => (k === "oficial" ? v.pos : k === "rob" ? (4 - v.rob) * 10000 + v.pos : v.posp[k]);
+  return VIAS.filter((v) => !mun || v.p.municipio === mun).sort((a, b) => chave(a) - chave(b));
+}
+const celPos = (x, k) => `<td class="${x <= TOPO ? "forte" : ""}${gOrdem === k ? " ord" : ""}">${x}º</td>`;
+function metodoPerfis() {
+  const w = PESOS_PERFIL.nec;
+  return `<p>Índice do perfil = soma ponderada de quatro critérios, todos na escala de 0 a 1:</p><ul>
+    <li><b>Vulnerabilidade</b>: V/5, os mesmos cinco itens do ranking oficial, incluídos os registros de vistoria.</li>
+    <li><b>População</b>: soma das pessoas (Censo 2022) dos setores censitários cruzados pelo traçado; se o traçado não cruzar setor habitado, usam-se os setores a até 2 km. Escala logarítmica, com teto no percentil 99 (${fmt(CAP.pop)} pessoas).</li>
+    <li><b>Produção</b>: endereços de produção agropecuária do CNEFE 2022 a até 1 km do traçado: estabelecimentos agropecuários e endereços de outras finalidades cujo nome indica produção (fazenda, sítio, chácara, granja, curral, roçado, aviário, horta, viveiro, casa de farinha e semelhantes). A vistoria pode substituir a contagem. Escala logarítmica, com teto no percentil 99 (${fmt(CAP.prod)} endereços).</li>
+    <li><b>Facilidade</b>: 1 − F/10, a dificuldade do ranking oficial tomada como custo.</li></ul>
+    <p>Pesos (AHP): critério dominante do perfil ${fmt(w.w[0], 3)}; os outros dois critérios ${fmt(w.w[1], 3)} cada; facilidade ${fmt(w.w[3], 3)}. Razão de consistência ${fmt(w.cr, 3)}. O REGIC não entra nos perfis. Empate: vence a via com mais pessoas nos setores cruzados.</p>
+    <p>Os julgamentos da matriz (3 e 5) são uma referência de trabalho e devem ser validados pela SEINFRA-AM antes do uso em decisão. O ranking oficial continua sendo o do método do artigo; os perfis servem para verificar a robustez da prioridade.</p>`;
+}
+function desenharGeral() {
+  if (!CAP) return;
+  const ls = linhasGeral();
+  $("#geral-tabela").innerHTML = `<p class="nota">${fmt(ls.length)} vias. Em negrito, posições entre as ${TOPO} primeiras. Clique numa via para abrir a ficha.</p>
+    <table class="geral"><thead><tr><th>Oficial</th><th>Via</th><th>Necessidade</th><th>Benefício social</th><th>Escoamento da produção</th><th>Cenários</th></tr></thead><tbody>
+    ${ls.map((v) => `<tr data-id="${esc(v.p.id)}">${celPos(v.pos, "oficial")}<td>${esc(v.p.nome)}<br><small>${esc(v.p.municipio)}</small></td>${Object.keys(PERFIS).map((k) => celPos(v.posp[k], k)).join("")}<td class="${v.rob >= 3 ? "forte" : ""}${gOrdem === "rob" ? " ord" : ""}">${v.rob} de 4</td></tr>`).join("")}
+    </tbody></table>`;
+  $("#geral-metodo").innerHTML = metodoPerfis();
+}
+function relatorioPerfis() {
+  const ls = linhasGeral(), mun = $("#g-mun").value, ord = $("#g-ordem").selectedOptions[0].textContent;
+  abrirRelatorio(`
+    <h1>Ranking geral: ranking oficial e perfis de decisão</h1>
+    <p class="cab">Amazonas · ${mun ? esc(mun) : "todos os municípios"} · ${fmt(ls.length)} vias · ordenado por: ${esc(ord)} · emitido em ${new Date().toLocaleDateString("pt-BR")}</p>
+    <p>A tabela apresenta a posição de cada via no ranking oficial (método do artigo de referência, pesos V ${fmt(W.V, 3)} / D ${fmt(W.D, 3)} / F ${fmt(W.F, 3)}, peso REGIC ${fmt(RPESO * 100)} %) e em três perfis de decisão: Necessidade, Benefício social e Escoamento da produção. As posições são estaduais, entre ${fmt(VIAS.length)} vias. A coluna Cenários indica em quantos dos quatro rankings a via está entre as ${TOPO} primeiras.</p>
+    <p class="aviso">${AVISO_ESTIMATIVA}</p>
+    <table class="rel-larga"><thead><tr><th class="n">Nº</th><th>Via</th><th>Município</th><th class="n">Extensão (km)</th><th class="n">Pessoas nos setores cruzados</th><th class="n">Endereços de produção a até 1 km</th><th class="n">Índice oficial</th><th class="n">Ranking oficial</th><th class="n">Necessidade</th><th class="n">Benefício social</th><th class="n">Escoamento da produção</th><th class="n">Cenários</th></tr></thead><tbody>
+    ${ls.map((v, i) => `<tr><td class="n">${i + 1}</td><td>${esc(v.p.nome)}<br><small>${esc(v.p.tipo)}</small></td><td>${esc(v.p.municipio)}</td><td class="n">${fmt(v.p.km, 1)}</td>
+      <td class="n">${fmt(v.p.pop_setores)}</td><td class="n">${fmt(prodDe(v.p))}${ajustes[v.p.id]?._vist?.agro != null ? " (vistoria)" : ""}</td><td class="n">${fmt(v.n.ip * 100, 1)}</td>
+      <td class="n"><b>${v.pos}º</b></td>${Object.keys(PERFIS).map((k) => `<td class="n">${v.posp[k]}º</td>`).join("")}<td class="n">${v.rob} de 4</td></tr>`).join("")}
+    </tbody></table>
+    <h2>Como os perfis são calculados</h2>${metodoPerfis()}
+    <h2>Fontes de dados e limitações</h2>${fontesLimitacoes()}`);
 }
 
 /* ---------- relatórios ---------- */
@@ -778,6 +852,13 @@ document.querySelectorAll("[data-camada]").forEach((c) => c.addEventListener("ch
 $("#fechar-ficha").addEventListener("click", () => { selecionada = null; $("#ficha").hidden = true; estilizarMapa(); desenharLista(); mapa.invalidateSize(); history.replaceState(null, "", location.pathname); });
 $("#ficha").addEventListener("change", (e) => {
   const k = e.target.dataset.vistoria;
+  if (k === "agro" && selecionada) {
+    const id = selecionada.p.id, a = (ajustes[id] = ajustes[id] || {}), vs = (a._vist = a._vist || {}), t = e.target.value.trim();
+    if (t === "") { delete vs.agro; delete a["uso.agricola"]; } else { vs.agro = Math.max(0, Math.round(Number(t)) || 0); a["uso.agricola"] = vs.agro > 0 ? 1 : 0; }
+    if (!Object.keys(vs).length) delete a._vist;
+    if (!Object.keys(a).length) delete ajustes[id];
+    guardar("ajustes", ajustes); recalcular(); desenharFicha(); return;
+  }
   if (k && selecionada) {
     const id = selecionada.p.id, a = (ajustes[id] = ajustes[id] || {}), vs = (a._vist = a._vist || {});
     Object.values(VIST[k]).forEach((m) => Object.keys(m).forEach((c) => delete a[c]));
@@ -799,6 +880,9 @@ $("#ficha").addEventListener("click", (e) => {
   if (e.target.id === "btn-desfazer") { delete ajustes[selecionada.p.id]; guardar("ajustes", ajustes); recalcular(); desenharFicha(); }
 });
 $("#btn-rel-geral").addEventListener("click", relatorioGeral);
+["#g-ordem", "#g-mun"].forEach((s) => $(s).addEventListener("change", () => { gOrdem = $("#g-ordem").value; desenharGeral(); }));
+$("#btn-geral-imp").addEventListener("click", relatorioPerfis);
+$("#geral-tabela").addEventListener("click", (e) => { const tr = e.target.closest("tr[data-id]"); if (tr) selecionar(VIAS.find((v) => v.p.id === tr.dataset.id)); });
 $("#rel-voltar").addEventListener("click", () => { $("#relatorio").hidden = true; });
 $("#rel-imprimir").addEventListener("click", () => window.print());
 $("#btn-csv").addEventListener("click", () => {

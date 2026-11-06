@@ -169,6 +169,22 @@ svg.perfil { width: 100%; height: 110px; display: block; margin-top: 6px; }
 .vistoria label { display: block; font-size: 13.5px; font-weight: 600; margin-top: 6px; }
 .vistoria select { display: block; width: 100%; margin-top: 2px; padding: 4px; border: 1px solid #b9bfae; border-radius: 3px; background: #fff; font: inherit; font-weight: 400; }
 .o-prem { color: #6b3fa0; }
+.vistoria input { display: block; width: 100%; margin-top: 2px; padding: 4px; border: 1px solid #b9bfae; border-radius: 3px; font: inherit; font-weight: 400; }
+.geral-ctl { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.geral-ctl label { flex: 1; font-size: 13px; font-weight: 600; }
+.geral-ctl select { display: block; width: 100%; margin-top: 2px; padding: 4px; border: 1px solid #b9bfae; border-radius: 3px; background: #fff; font: inherit; font-weight: 400; }
+table.geral { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+table.geral th, table.geral td { padding: 4px 2px; border-bottom: 1px solid #dde0d4; text-align: right; vertical-align: top; font-variant-numeric: tabular-nums; }
+table.geral th { font-size: 10.5px; line-height: 1.2; }
+table.geral th:nth-child(2), table.geral td:nth-child(2) { text-align: left; }
+table.geral tbody tr { cursor: pointer; }
+table.geral tbody tr:hover { background: #eef0e8; }
+table.geral small { color: var(--tinta-2); }
+table.geral .forte { font-weight: 700; }
+table.geral .ord { background: #eef0e8; }
+#rel-conteudo table.rel-larga { font-size: 11.5px; }
+#rel-conteudo table.rel-larga th, #rel-conteudo table.rel-larga td { padding: 4px 3px; }
+#rel-conteudo table.rel-larga small { font-size: 10.5px; }
 .metodo h2 { font: 700 19px var(--fonte-c); margin: 18px 0 4px; border-bottom: 2px solid var(--tinta); }
 .metodo h3, #rel-conteudo h3 { font: 700 16px var(--fonte-c); margin: 14px 0 4px; }
 .metodo p, .metodo li { font-size: 14px; line-height: 1.5; }

@@ -37,6 +37,20 @@ Público: engenheiros e gestores públicos. A plataforma é estática (GitHub Pa
 - Empate: vence a via com mais moradores no entorno.
 - Itens marcados como **estimativa** (agricultura, pontes, pavimento, várzea) podem ser ajustados na ficha. Os ajustes ficam no navegador e podem ser exportados e importados em JSON.
 
+### Ranking geral (aba Ranking geral)
+
+Mostra, para cada via, a posição no ranking oficial e em três perfis de decisão, mais a coluna Cenários (em quantos dos 4 rankings a via está entre as 100 primeiras). A tabela pode ser impressa. O ranking oficial continua sendo o do artigo; os perfis medem a robustez da prioridade.
+
+- Índice do perfil = soma ponderada, na escala de 0 a 1, de:
+  - Vulnerabilidade (V/5);
+  - População: pessoas dos setores censitários (Censo 2022) cruzados pelo traçado, com setores a até 2 km se nenhum for cruzado; escala log com teto no percentil 99;
+  - Produção: endereços de produção do CNEFE 2022 a até 1 km, ou seja, espécie 3 (estabelecimento agropecuário) mais espécie 6 cujo nome indica produção (fazenda, sítio, granja, curral, casa de farinha…); escala log com teto no percentil 99;
+  - Facilidade (1 − F/10).
+- Pesos AHP: critério dominante 3× os outros dois e 5× a facilidade → 0,532 / 0,185 / 0,185 / 0,097 (RC 0,002). Os perfis são Necessidade (V dominante), Benefício social (população) e Escoamento da produção (produção). O REGIC fica fora.
+- A vistoria pode informar o número de propriedades produtivas. O valor substitui o CNEFE no perfil e define o item agrícola do D (1 ou 0).
+- A população dos setores cruzados (`pop_setores`) só é usada nos perfis. O D do ranking oficial continua com a população no raio de 2 km.
+- Os julgamentos 3 e 5 são referência de trabalho e devem ser validados pela SEINFRA-AM.
+
 ### Terminais flutuantes e aeródromos
 
 Índice = 3/7·V/5 + 3/7·demanda/5 + 1/7·R (AHP: V e demanda com peso igual, cada um 3 vezes o REGIC; RC = 0).
@@ -137,4 +151,6 @@ Ao mudar `app.js`, `modulos.js` ou `style.css`, aumente o `?v=` correspondente n
 - 05/11/2026: troca para o traçado de ramais da SEINFRA (REV06), população por setor rateada pelo CNEFE, escolas e saúde (CNES e CNEFE), drenagem do BC250.
 - 05/11/2026: módulos de Terminais, Aeródromos, Saúde e cobertura e REGIC; explicação da posição de cada item; peso REGIC nos ramais.
 - 06/11/2026: reformulação editorial da plataforma e do relatório em PDF (base `textos.js`, natureza de cada informação, alerta de possível inconsistência no indicador de assentamento). Cálculos e ranking inalterados.
+- 06/11/2026: premissa de pavimento e pontes pela coluna Situação do REV06 e bloco Vistoria de campo.
+- 06/11/2026: aba Ranking geral (ranking oficial + perfis Necessidade, Benefício social e Escoamento da produção, coluna Cenários, tabela imprimível); população por setores cruzados; produção pelo CNEFE (`data/raw/ibge_cnefe_producao_AM.json`); vistoria de produção. Ranking oficial inalterado.
 - 05/11/2026: correções na aba Terminais (numeração da lista filtrada, camadas dos ramais ocultas fora da aba, manchas urbanas isoladas).

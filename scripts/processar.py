@@ -185,6 +185,8 @@ saude_cnefe = [(Point(lon, lat), {"nome": n.title(), "tipo": "Saúde", "fonte": 
 servicos = escolas + cnes + saude_cnefe
 agro_cnefe = [(Point(lon, lat), {"nome": "Estabelecimento agropecuário", "tipo": "agricola", "fonte": "IBGE CNEFE 2022"})
               for lat, lon in cnefe["agro"]]
+producao = [(Point(lon, lat), {"nome": nome.title() if nome and not nome.startswith(("SEM NOME", "SN", "SD", "NAO ", "S/N")) else "Estabelecimento agropecuário", "tipo": "agropecuário" if esp == "3" else "outras finalidades", "fonte": "IBGE CNEFE 2022"})
+            for lat, lon, esp, nome in ler("ibge_cnefe_producao_AM.json")]
 lugares = pontos_osm("osm_lugares.json", lambda t: t.get("place"))
 def tipo_uso(t):
     if t.get("tourism"):
@@ -196,7 +198,7 @@ usos = pontos_osm("osm_usosolo.json", tipo_uso)
 assent = [x for x in lugares + usos if any(k in x[1]["nome"].lower() for k in ("assentamento", "p.a.", "pa ", "pds ", "paex"))]
 I = {k: Pontos(v) for k, v in dict(aero=aeroportos, porto=portos, serv=servicos, lugar=lugares, assent=assent,
                                     agric=[u for u in usos if u[1]["tipo"] == "agricola"] + agro_cnefe,
-                                    tur=[u for u in usos if u[1]["tipo"] == "turismo"],
+                                    prod=producao, tur=[u for u in usos if u[1]["tipo"] == "turismo"],
                                     ind=[u for u in usos if u[1]["tipo"] == "industrial"]).items()}
 print("  escolas", len(escolas), "saúde CNES", len(cnes), "saúde CNEFE", len(saude_cnefe), "agropecuários", len(agro_cnefe))
 print("  aeroportos", len(aeroportos), "portos", len(portos), "serviços", len(servicos), "lugares", len(lugares), "assentamentos", len(assent))
@@ -403,6 +405,11 @@ for tipo, nome, ways, geom_ll, gm, km, info in prontas:
            "turismo": int(bool(tur)), "industrial": int(bool(ind))}
     # --- Nível de ocupação
     pes, dom, det_setores = populacao(gm)
+    # população dos setores cruzados pelo traçado (perfis); sem cruzamento com setor habitado, setores a até 2 km
+    cruz, cruz_metodo = list(arv_set.query(gm, predicate="intersects")), "setores cruzados pelo traçado"
+    if not cruz:
+        cruz, cruz_metodo = list(arv_set.query(gm, predicate="dwithin", distance=2000)), "setores a até 2 km (o traçado não cruza setor habitado)"
+    prod = I["prod"].perto(gm, 1000)
     own = set(ways)
     pj = entroncamentos(gm, own)
     juncoes = pj
@@ -458,9 +465,11 @@ for tipo, nome, ways, geom_ll, gm, km, info in prontas:
         "pop_mun": pop_mun.get(cod), "km": round(km, 2),
         "uso": uso, "pop": pes, "dom": dom, "juncoes": len(juncoes), "n_pop": n_pop, "n_sub": n_sub,
         "vul": vul, "dif": dif,
+        "pop_setores": int(sum(setores[i][1] for i in cruz)), "n_setores_cruzados": len(cruz), "pop_setores_metodo": cruz_metodo,
+        "producao": len(prod),
         "ev": {  # evidências mostradas no relatório
             "comunidades": lista([(a, d) for a, d in com]), "assentamentos": lista(ass), "agricola": lista(agr),
-            "turismo": lista(tur), "industrial": lista(ind), "aeroportos": lista(aer, 3), "portos": lista(por, 3),
+            "producao": lista(prod), "turismo": lista(tur), "industrial": lista(ind), "aeroportos": lista(aer, 3), "portos": lista(por, 3),
             "servicos": lista(serv, 8), "ucs": uc_l, "tis": ti_l, "sitios": lista(sit, 8),
             "frac_nao_pavimentada": round(frac_unp, 2), "travessias": travessias, "igarapes": igarapes, "sem_ponte": sem_ponte,
             "pontes_madeira": madeira, "rios": sorted(rios_cruzados)[:8], "alagados": len(alag),
