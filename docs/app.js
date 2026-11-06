@@ -426,11 +426,14 @@ function posicionamento(v) {
     <ul class="vizinhas">${viz(ordem[v.pos - 2], true)}${viz(ordem[v.pos], false)}</ul>`;
 }
 
-function sensibilidade(v) {
-  const p = v.p, cen = [...ITENS.V, ...ITENS.D, ...ITENS.F].filter(([, , , est]) => est).map(([c, r, escala]) => {
-    const atual = valor(p, c), alt = atual > escala[0] ? escala[0] : escala[escala.length - 1], ip = ipCom(v, c, alt);
+function cenariosSens(v) { // alteração isolada de cada indicador estimado
+  return [...ITENS.V, ...ITENS.D, ...ITENS.F].filter(([, , , est]) => est).map(([c, r, escala]) => {
+    const atual = valor(v.p, c), alt = atual > escala[0] ? escala[0] : escala[escala.length - 1], ip = ipCom(v, c, alt);
     return { c, r, atual, alt, ip, pos: posicaoCom(v, ip) };
   });
+}
+function sensibilidade(v) {
+  const p = v.p, cen = cenariosSens(v);
   const muda = cen.filter((x) => x.pos !== v.pos), fixo = cen.filter((x) => x.pos === v.pos);
   const desc = (c, x) => (IND[c].esc ? ` (${IND[c].esc[x]})` : "");
   const maior = muda.slice().sort((a, b) => Math.abs(b.pos - v.pos) - Math.abs(a.pos - v.pos))[0];
@@ -772,7 +775,7 @@ function abrirRelatorio(html, depois) {
 function tabelaRel(p, letra) {
   return `<table class="rel-itens"><thead><tr><th>Indicador e evidência</th><th>Natureza</th><th class="n">Nota</th></tr></thead><tbody>${ITENS[letra].map(([c, rot]) => {
     const al = c === "uso.assentamento" ? alertaAssentamento(p) : "";
-    return `<tr><td><b>${esc(rot)}</b><br><small>${esc(IND[c].o)}</small><br>Evidência: ${esc(evidencia(p, c))}<br>Leitura: ${esc(leituraItem(p, c))}${al ? `<br><span class="alerta">${esc(al)}</span>` : ""}</td>
+    return `<tr><td><b>${esc(rot)}</b><div class="como-funciona"><b>Como funciona:</b> ${esc(IND[c].o)}</div>Evidência: ${esc(evidencia(p, c))}<br>Leitura: ${esc(leituraItem(p, c))}${al ? `<br><span class="alerta">${esc(al)}</span>` : ""}</td>
       <td>${ORIGEM[origemDe(p, c)][0]}${origemDe(p, c) === "campo" ? ` (calculado: ${auto(p, c)})` : ""}</td><td class="n">${valor(p, c)}</td></tr>`;
   }).join("")}</tbody></table>`;
 }
@@ -782,9 +785,10 @@ function relatorioVia(v) {
   abrirRelatorio(`
     <h1>${esc(p.nome)}</h1>
     <p class="cab">Relatório técnico de priorização · ${esc(p.tipo)} · ${esc(p.municipio)}/AM · emitido em ${new Date().toLocaleDateString("pt-BR")}</p>
-    <p class="aviso">${AVISO_ESTIMATIVA}</p>
+    ${resumoExecutivo(v)}
 
     <h2>1. Identificação e caracterização da via</h2>
+    <p class="aviso">${AVISO_ESTIMATIVA}</p>
     <table><tbody>
       <tr><td>Denominação</td><td class="n">${esc(p.nome)}</td></tr>
       <tr><td>Tipo</td><td class="n">${esc(p.tipo)}</td></tr>
@@ -850,6 +854,56 @@ function relatorioVia(v) {
     const g = L.geoJSON(v.layer.toGeoJSON(), { style: { color: cor("--p1"), weight: 5 } }).addTo(mm);
     mm.fitBounds(g.getBounds(), { padding: [20, 20], maxZoom: 13 });
   });
+}
+
+/* ---------- resumo executivo do relatório da via (leitura rápida para gestores) ---------- */
+const nivelDif = (F) => (F <= 3 ? "Baixa" : F <= 6 ? "Média" : "Alta"); // 0 a 3 baixa; 4 a 6 média; 7 a 10 alta
+const brl = (x) => x.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+function resumoExecutivo(v) {
+  const p = v.p, n = v.n, N = ordem.length, s = p.seinfra, m = REGIC[p.cod_mun];
+  const partes = [["a vulnerabilidade de transporte", n.pv], ["o desenvolvimento local", n.pd], ["a facilidade de execução", n.pf], ["a importância do município na rede urbana (REGIC)", n.pr]].sort((a, b) => b[1] - a[1]);
+  const mai = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+  const cV = marcados(p, "V"), cD = marcados(p, "D"), cF = marcados(p, "F", (c) => !(c === "dif.relevo" && valor(p, c) === 1));
+  const cen = cenariosSens(v), maior = cen.filter((x) => x.pos !== v.pos).sort((a, b) => Math.abs(b.pos - v.pos) - Math.abs(a.pos - v.pos))[0];
+  const conferir = cen.filter((x) => valor(p, x.c) === auto(p, x.c)).map((x) => x.r), al = alertaAssentamento(p);
+  const custo = s?.custo_estimado
+    ? [brl(s.custo_estimado), `Valor do cadastro da SEINFRA-AM: ${brl(s.custo_estimado / s.extensao_km)} por km × ${fmt(s.extensao_km, 2)} km. Referência preliminar, sem data-base nem composição.`]
+    : ["Não informado", "A via não tem custo no cadastro da SEINFRA-AM."];
+  const caixa = (r, val, det) => `<div><span>${r}</span><b>${val}</b><small>${det}</small></div>`;
+  return `<section class="resumo-exec">
+    <h2>Resumo executivo</h2>
+    <p class="lead">A via <b>${esc(p.nome)}</b>, em ${esc(p.municipio)}, está na <b>${v.pos}ª posição</b> entre ${fmt(N)} vias avaliadas no Amazonas, na faixa ${FAIXAS[corPorPosicao(v.pos - 1, N)]}.</p>
+    <div class="exec-num">
+      ${caixa("Posição no ranking", `${v.pos}ª de ${fmt(N)}`, `Índice de prioridade ${fmt(n.ip * 100, 1)} (0 a 100)`)}
+      ${caixa("Pessoas atendidas", fmt(p.pop_setores), `Moradores dos setores censitários cruzados pelo traçado (Censo 2022). No entorno de 2 km: ${fmt(p.pop)} pessoas.`)}
+      ${caixa("Custo estimado da obra", custo[0], custo[1])}
+      ${caixa("Dificuldade de execução", nivelDif(n.F), `Nota ${fmt(n.F)} de 10 (0 a 3 baixa; 4 a 6 média; 7 a 10 alta)`)}
+      ${caixa("Extensão", `${fmt(p.km, 1)} km`, `${esc(p.tipo)}${s ? ` · situação no cadastro: ${esc(s.situacao)}` : ""}`)}
+      ${caixa("Robustez da prioridade", `${v.rob} de 4 cenários`, "Rankings em que a via está entre as 100 primeiras: oficial, Necessidade, Benefício social e Escoamento da produção")}
+    </div>
+    <h3>Por que está nesta posição</h3>
+    <ul>
+      <li>O que mais pesou foi ${partes[0][0]}: ${fmt(partes[0][1] * 100, 1)} dos ${fmt(n.ip * 100, 1)} pontos. Em seguida, ${partes[1][0]}, com ${fmt(partes[1][1] * 100, 1)} pontos.</li>
+      <li>${cV.length ? `Problemas de acesso identificados: ${lista(cV)}.` : "Não foram identificados problemas de acesso nas bases consultadas, o que reduz a prioridade."}</li>
+      <li>${n.F >= 4 ? `A dificuldade de execução (${fmt(n.F)} de 10) reduz o índice.` : `A execução tem dificuldade ${nivelDif(n.F).toLowerCase()} (${fmt(n.F)} de 10), o que favorece a via.`}</li>
+    </ul>
+    <h3>Situação em cada tema</h3>
+    <ul>
+      <li><b>Acesso e transporte:</b> nota ${fmt(n.V)} de 5. ${cV.length ? `${mai(lista(cV))}.` : "Sem deficiências registradas."}</li>
+      <li><b>Desenvolvimento local:</b> nota ${fmt(n.D, 1)} de 10. ${cD.length ? `${mai(lista(cD))}.` : "Sem atividades econômicas ou comunidades registradas no entorno."} Produção agropecuária a até 1 km: ${plural(prodDe(p), "endereço", "endereços")} no CNEFE${ajustes[p.id]?._vist?.agro != null ? " (valor de vistoria)" : ""}.</li>
+      <li><b>Execução da obra:</b> dificuldade ${nivelDif(n.F).toLowerCase()}. ${cF.length ? `${mai(lista(cF))}.` : "Sem fatores de dificuldade registrados."}</li>
+      <li><b>Rede urbana:</b> ${m ? `${esc(m.nome)} é ${esc(m.hierarquia)} no REGIC 2018; ${RPESO ? `o componente somou ${fmt(n.pr * 100, 1)} pontos` : "o componente está com peso zero"}.` : "não há dado do REGIC para o município."}</li>
+      <li><b>Outros pontos de vista:</b> ${v.posp.nec}ª em Necessidade, ${v.posp.soc}ª em Benefício social e ${v.posp.esc}ª em Escoamento da produção, entre as mesmas ${fmt(N)} vias.</li>
+      <li><b>Sensibilidade:</b> ${maior ? `a posição depende principalmente de “${esc(maior.r)}”. Se esse dado mudar, a via iria para a ${maior.pos}ª posição.` : "nenhuma alteração isolada dos dados estimados muda a posição da via."}</li>
+    </ul>
+    <h3>Antes de decidir</h3>
+    <ul>
+      <li>${conferir.length ? `Confirmar em vistoria: ${lista(conferir.map((x) => x.charAt(0).toLowerCase() + x.slice(1)))}.` : "Os dados estimados já foram confirmados em vistoria."}</li>
+      ${al ? `<li class="alerta">${esc(al)}</li>` : ""}
+      <li>O custo é referência do cadastro e deve ser substituído pelo orçamento do projeto.</li>
+    </ul>
+    <p class="nota">As seções 1 a 10 a seguir trazem o detalhamento técnico de cada informação deste resumo.</p>
+  </section>`;
 }
 
 function relatorioGeral() {

@@ -137,7 +137,8 @@ Ao mudar `app.js`, `modulos.js` ou `style.css`, aumente o `?v=` correspondente n
 - Dados brutos (`data/`) não vão para o repositório.
 - Premissa de pavimento e pontes (06/11/2026): ramal com obra na coluna Situação do REV06 (CONCLUÍDO ou EM OBRA, 63 ramais) é considerado pavimentado; os demais (OBRA EXTINTA incluída) ficam em leito natural e sem ponte em nenhuma travessia de rio. A ficha tem o bloco Vistoria de campo para registrar pavimento e pontes constatados; o registro substitui a premissa.
 - Redação: português formal, técnico e acessível. Cada resultado explica o que foi avaliado, o que foi encontrado e como pesou no índice. Ausência de registro em base pública não é tratada como inexistência comprovada.
-- O relatório da via segue 10 seções: identificação; síntese; contexto territorial; transporte (V); desenvolvimento (D); projeto e execução (F); posição no ranking (com REGIC); sensibilidade e validação; memória metodológica; fontes e limitações.
+- O relatório da via abre com um **resumo executivo** de uma página e meia para secretário e governador: posição e motivo, pessoas atendidas (setores cruzados e entorno de 2 km), custo do cadastro (R$ 2.500.000 por km em todo o cadastro), nível de dificuldade (0 a 3 baixa, 4 a 6 média, 7 a 10 alta), robustez nos 4 cenários, situação de cada tema, sensibilidade e o que confirmar em vistoria. O texto do relatório é justificado e a explicação de critérios e indicadores aparece em caixa "Como funciona".
+- Depois do resumo, o relatório da via segue 10 seções: identificação; síntese; contexto territorial; transporte (V); desenvolvimento (D); projeto e execução (F); posição no ranking (com REGIC); sensibilidade e validação; memória metodológica; fontes e limitações.
 
 ## 7. Limitações e próximos passos
 
@@ -161,4 +162,5 @@ Ao mudar `app.js`, `modulos.js` ou `style.css`, aumente o `?v=` correspondente n
 - 06/11/2026: premissa de pavimento e pontes pela coluna Situação do REV06 e bloco Vistoria de campo.
 - 06/11/2026: aba Ranking geral (ranking oficial + perfis Necessidade, Benefício social e Escoamento da produção, coluna Cenários, tabela imprimível); população por setores cruzados; produção pelo CNEFE (`data/raw/ibge_cnefe_producao_AM.json`); vistoria de produção. Ranking oficial inalterado.
 - 06/11/2026: aba Por população (ramais), ordenação por população nos terminais, botão Camadas no mapa (todas as camadas, em qualquer módulo), terminais flutuantes da SEINFRA como camada e retirada do ranking dos locais que já têm terminal.
+- 06/11/2026: resumo executivo no relatório da via, texto justificado e caixas "Como funciona".
 - 05/11/2026: correções na aba Terminais (numeração da lista filtrada, camadas dos ramais ocultas fora da aba, manchas urbanas isoladas).
