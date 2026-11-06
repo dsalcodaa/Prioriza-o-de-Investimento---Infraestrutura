@@ -88,6 +88,13 @@ Importância (0 a 1) = 0,7 × nota da hierarquia + 0,3 × índice de atração (
 
 Notas da hierarquia: 1A, 1B e 1C = 1,0; 2A 0,9; 2B 0,85; 2C 0,8; 3A 0,7; 3B 0,65; 4A 0,5; 4B 0,45; 5 = 0,25.
 
+### Interface (módulo Ramais e rodovias)
+
+- Abas: Ranking (oficial), Ranking geral (oficial + 3 perfis + Cenários), Por população, Pesos AHP, Camadas, Método.
+- Ficha da via: subabas Notas (com bloco Vistoria de campo: revestimento, pontes, produção), Por que esta posição, Território.
+- Botão **Camadas** no canto do mapa: liga e desliga qualquer camada em qualquer módulo, com "Ativar todas" e "Desativar todas".
+- Relatórios imprimíveis: relatório da via (resumo executivo + 10 seções), relatório geral do ranking, tabela do Ranking geral, tabela Por população, relatórios dos módulos.
+
 ## 4. Estrutura e fluxo de dados
 
 ```
@@ -119,7 +126,9 @@ Ao mudar `app.js`, `modulos.js` ou `style.css`, aumente o `?v=` correspondente n
 | Vias ordenadas (SEINFRA + rodovias AM) | 918 |
 | Núcleos | 1.995 (1.173 comunidades rurais do CNEFE) |
 | Pessoas cobertas pelas unidades de população | 3.941.613 |
-| Candidatos a terminal | 1.172 |
+| Candidatos a terminal (sem terminal a até 2 km) | 1.071 (101 retirados por já terem terminal) |
+| Terminais flutuantes no cadastro da SEINFRA | 31 |
+| Endereços de produção agropecuária no CNEFE (espécie 3 + espécie 6 por nome) | cerca de 67 mil |
 | Candidatos a aeródromo | 126 |
 | Lacunas de atenção primária | 1.412 |
 | Pessoas sem atenção primária a até 5 km | 524.726 |
@@ -143,7 +152,7 @@ Ao mudar `app.js`, `modulos.js` ou `style.css`, aumente o `?v=` correspondente n
 ## 7. Limitações e próximos passos
 
 1. **Distâncias em linha reta.** O percurso real no Amazonas é fluvial. Próximo passo: rede fluvial navegável com tempo de viagem (ANTAQ, DNIT, SEINFRA).
-2. **Portos e terminais incompletos.** O OpenStreetMap tem 367 pontos. Integrar o cadastro da SEINFRA, da ANTAQ e do DNIT (IP4).
+2. **Portos e terminais incompletos.** O OpenStreetMap tem 367 pontos e o cadastro da SEINFRA, 31 terminais flutuantes (já integrados). Falta integrar ANTAQ e DNIT (IP4).
 3. **Operador dos aeródromos.** A ANAC não informa se o aeródromo público é estadual ou municipal. Cruzar com o cadastro da SEINFRA.
 4. **Equipes de saúde.** Integrar o e-Gestor ou o CNES de equipes para saber quantas equipes cada unidade tem.
 5. **Assentamentos por nome.** A busca por termos como `pa ` no nome associa registros indevidos (exemplo: “Pousada SPA” no Ramal do Km 8 – AM-352). A plataforma sinaliza esses casos; a regra em `scripts/processar.py` (linha da lista `assent`) deve ser revista ou substituída pela base do INCRA.
@@ -152,15 +161,42 @@ Ao mudar `app.js`, `modulos.js` ou `style.css`, aumente o `?v=` correspondente n
 8. **INCRA** estava fora do ar na coleta. Assentamentos vêm só de nomes no OpenStreetMap.
 9. **Várzea e igapó** são estimados pelo relevo. Confirmar por vistoria.
 
-## 8. Histórico
+## 8. Análises feitas só na conversa (não estão no site)
+
+Simulações pedidas pelo usuário para comparar com o modelo atual antes de decidir se vão para o site.
+
+- **Por que ramais da região de Manaus lideram:** dos 100 primeiros, 93 são dos 13 municípios ligados a Manaus por estrada. Esses ramais somam mais V, porque 67 % não têm porto ou aeroporto a 10 km, contra 24 % no interior. Somam também mais pontos de REGIC.
+- **Sem REGIC (r = 0):** Km 8 – AM-352 continua em 1º; o interior passa de 7 para 9 ramais no top 100.
+- **Regra de município isolado** (fora dos 13 municípios ligados por estrada → item "sem intermodal" = 1): o interior chega a 29 ramais no top 100 com REGIC 15 % e a 41 com REGIC 0 %. Km 8 continua em 1º.
+- **Indicador de porto e aeroporto:** é o item 2.1.5 do artigo (não foi criado pela plataforma).
+- **Locais de estudo do artigo:** Janauari e Jandira (Iranduba), Manápolis (Autazes, segundo o usuário) e Novo Remanso (perto de Itacoatiara).
+- **Leitura do artigo:** o método não está errado. Ele responde à pergunta da vulnerabilidade de transporte; trocar os pesos ou critérios responde outras perguntas (população, produção). A conclusão do artigo já prevê essa adaptação.
+- **Recomendação para uso governamental:**
+  - manter o ranking do artigo como oficial;
+  - usar os perfis como análise de sensibilidade e selo de robustez;
+  - pesos dos perfis definidos pela SEINFRA em ato formal;
+  - não oferecer seletor livre de perfil para decisão.
+
+## 9. Pendências que dependem do usuário
+
+- Levar ao site a regra de município isolado ou o ranking sem REGIC (simulados só na conversa).
+- Validar com a SEINFRA os julgamentos AHP dos perfis (3 e 5) e o raio de 2 km para "já tem terminal".
+- Corrigir a regra de assentamento por nome (`assent` em `scripts/processar.py`) ou trocar pela base do INCRA.
+- Revisar a lista dos 13 municípios ligados a Manaus por estrada usada nas simulações.
+- Definir se OBRA EXTINTA conta como obra na premissa de pavimento.
+- Conferir com a SEINFRA a coordenada da "Comunidade Filadélfia" (Benjamin Constant).
+- Decidir se a população dos setores cruzados (`pop_setores`) também substitui a população de 2 km no D do ranking oficial (hoje só é usada nos perfis e na aba Por população).
+
+## 10. Histórico
 
 - 05/11/2026: leitura dos PDFs de metodologia e síntese em MD.
 - 05/11/2026: primeira versão da plataforma (ramais e rodovias, AHP, fichas, relatórios).
 - 05/11/2026: troca para o traçado de ramais da SEINFRA (REV06), população por setor rateada pelo CNEFE, escolas e saúde (CNES e CNEFE), drenagem do BC250.
 - 05/11/2026: módulos de Terminais, Aeródromos, Saúde e cobertura e REGIC; explicação da posição de cada item; peso REGIC nos ramais.
+- 05/11/2026: correções na aba Terminais (numeração da lista filtrada, camadas dos ramais ocultas fora da aba, manchas urbanas isoladas).
+- 06/11/2026: repositório publicado (dsalcodaa/Prioriza-o-de-Investimento---Infraestrutura) e GitHub Pages ativo em main /docs: https://dsalcodaa.github.io/Prioriza-o-de-Investimento---Infraestrutura/
 - 06/11/2026: reformulação editorial da plataforma e do relatório em PDF (base `textos.js`, natureza de cada informação, alerta de possível inconsistência no indicador de assentamento). Cálculos e ranking inalterados.
 - 06/11/2026: premissa de pavimento e pontes pela coluna Situação do REV06 e bloco Vistoria de campo.
 - 06/11/2026: aba Ranking geral (ranking oficial + perfis Necessidade, Benefício social e Escoamento da produção, coluna Cenários, tabela imprimível); população por setores cruzados; produção pelo CNEFE (`data/raw/ibge_cnefe_producao_AM.json`); vistoria de produção. Ranking oficial inalterado.
 - 06/11/2026: aba Por população (ramais), ordenação por população nos terminais, botão Camadas no mapa (todas as camadas, em qualquer módulo), terminais flutuantes da SEINFRA como camada e retirada do ranking dos locais que já têm terminal.
-- 06/11/2026: resumo executivo no relatório da via, texto justificado e caixas "Como funciona".
-- 05/11/2026: correções na aba Terminais (numeração da lista filtrada, camadas dos ramais ocultas fora da aba, manchas urbanas isoladas).
+- 06/11/2026: resumo executivo no relatório da via, texto justificado e caixas "Como funciona"; `../Relatorio_Ramal_Km8_AM-352.pdf` regerado.
