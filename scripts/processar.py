@@ -271,7 +271,7 @@ nomes_campos = [re.sub(r"[^A-Za-z/ ]", "", f[0]) for f in sf_r.fields[1:]]  # no
 def campo(prefixo):
     return next(i for i, n in enumerate(nomes_campos) if n.startswith(prefixo))
 C = {k: campo(v) for k, v in dict(cod="CDIGO", num="Nmero", desc="Descri", acesso="Rodovia/Es", ref="Ponto de r", mun="Munic",
-                                   ext="Extens", rev="Revestimen", sit="Situa", custo="Custo Esti").items()}
+                                   ext="Extens", rev="Revestimen", sit="Situa", custo="Custo Esti", ct="N CT", resumo="RESUMO").items()}
 assert C["num"] == C["cod"] + 1, nomes_campos[:5]
 MINUSC = {"de", "do", "da", "dos", "das", "e", "a", "o"}
 def titulo(t):
@@ -290,13 +290,18 @@ for k, sr in enumerate(sf_r.iterShapeRecords()):
         continue
     r = sr.record
     rev = str(r[C["rev"]]).strip().upper()
-    tags = {"surface": "paved" if rev.startswith("PAVIMENT") else "unpaved", "highway": "unclassified"}
+    sit = str(r[C["sit"]]).strip().upper()
+    contrato = str(r[C["ct"]] or "").strip()
+    # premissa do estudo: ramal com obra na coluna Situação (concluída ou em andamento) está pavimentado; os demais, em leito natural e sem ponte
+    obra = "CONCLU" in sit or "EM OBRA" in sit
+    tags = {"surface": "paved" if obra else "unpaved", "highway": "unclassified"}
     ways = {f"seinfra-{k}-{j}": (l, tags) for j, l in enumerate(linhas)}
     for wid, (l, _) in ways.items():
         outras[wid] = proj(l)
     info = {"codigo": f'{r[C["cod"]]}-{r[C["num"]]}', "acesso": r[C["acesso"]], "referencia": r[C["ref"]],
             "municipio_seinfra": r[C["mun"]], "extensao_km": numero(r[C["ext"]]), "revestimento": rev.title(),
-            "situacao": str(r[C["sit"]]).strip().title(), "custo_estimado": numero(r[C["custo"]])}
+            "situacao": str(r[C["sit"]]).strip().title(), "custo_estimado": numero(r[C["custo"]]),
+            "obra": obra, "contrato": contrato or None, "resumo_obra": " ".join(str(r[C["resumo"]] or "").split()) or None}
     alternativas.append(("Ramal / estrada vicinal", titulo(str(r[C["desc"]]).strip()), ways, info))
 alternativas = [a if len(a) == 4 else (*a, None) for a in alternativas]
 print("  alternativas:", len(alternativas), "(ramais SEINFRA:", sum(1 for a in alternativas if a[3]), ")")
@@ -426,7 +431,8 @@ for tipo, nome, ways, geom_ll, gm, km, info in prontas:
                 continue
             if rn:
                 rios_cruzados.add(rn)
-            perto_ponte = any(p.distance(b) < 40 for b in pontes_proprias) or (
+            sem_obra = info is not None and not info["obra"]
+            perto_ponte = not sem_obra and any(p.distance(b) < 40 for b in pontes_proprias) or not sem_obra and (
                 arv_ponte is not None and any(pontes[j].distance(p) < 40 for j in arv_ponte.query(p.buffer(40))))
             if not perto_ponte:
                 sem_ponte += 1
@@ -459,7 +465,7 @@ for tipo, nome, ways, geom_ll, gm, km, info in prontas:
             "frac_nao_pavimentada": round(frac_unp, 2), "travessias": travessias, "igarapes": igarapes, "sem_ponte": sem_ponte,
             "pontes_madeira": madeira, "rios": sorted(rios_cruzados)[:8], "alagados": len(alag),
             "alt_media": round(h_med, 1), "alt_min": min(alts, default=None), "alt_max": max(alts, default=None),
-            "perfil": alts, "superficies": [info["revestimento"]] if info else sorted({t.get("surface", "não informado") for _, t in ways.values()}),
+            "perfil": alts, "superficies": [("Pavimentado (premissa: ramal com obra)" if info["obra"] else "Leito natural (premissa: ramal sem obra)")] if info else sorted({t.get("surface", "não informado") for _, t in ways.values()}),
             "setores": det_setores[:25], "n_setores": len(det_setores),
             "trechos": len(own), "fonte_tracado": "SEINFRA-AM 2025 (REV06)" if info else "OpenStreetMap",
         },

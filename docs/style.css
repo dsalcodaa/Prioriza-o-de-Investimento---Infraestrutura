@@ -164,6 +164,11 @@ svg.perfil { width: 100%; height: 110px; display: block; margin-top: 6px; }
 .o-cad { color: var(--mata); } .o-pub { color: var(--rio); } .o-esp { color: var(--tinta-2); } .o-est { color: var(--p2); } .o-campo { color: var(--p1); background: #f6e6e3; }
 .sintese { font-size: 14px; line-height: 1.5; background: var(--papel-2); padding: 10px 12px; border-left: 4px solid var(--tinta); margin: 10px 0; }
 .vizinhas li { margin-bottom: 6px; }
+.vistoria { border: 1px solid #b9bfae; background: #fff; padding: 8px 10px; margin: 10px 0; }
+.vistoria h4 { margin: 0 0 2px; font: 700 16px var(--fonte-c); }
+.vistoria label { display: block; font-size: 13.5px; font-weight: 600; margin-top: 6px; }
+.vistoria select { display: block; width: 100%; margin-top: 2px; padding: 4px; border: 1px solid #b9bfae; border-radius: 3px; background: #fff; font: inherit; font-weight: 400; }
+.o-prem { color: #6b3fa0; }
 .metodo h2 { font: 700 19px var(--fonte-c); margin: 18px 0 4px; border-bottom: 2px solid var(--tinta); }
 .metodo h3, #rel-conteudo h3 { font: 700 16px var(--fonte-c); margin: 14px 0 4px; }
 .metodo p, .metodo li { font-size: 14px; line-height: 1.5; }

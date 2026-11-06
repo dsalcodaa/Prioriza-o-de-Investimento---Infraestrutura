@@ -9,6 +9,7 @@ const ORIGEM = {
   pub: ["Base pública", "Registro existente em base pública (IBGE, CNES, INPE, IPHAN ou OpenStreetMap), associado à via por proximidade."],
   esp: ["Cálculo espacial", "Resultado calculado pela plataforma a partir do cruzamento geográfico do traçado com bases públicas."],
   est: ["Estimativa", "Valor inferido de forma indireta a partir de bases públicas. Deve ser confirmado em vistoria de campo."],
+  prem: ["Premissa do estudo", "Valor adotado por premissa: ramais com obra na coluna Situação do cadastro da SEINFRA-AM (concluída ou em andamento) são considerados pavimentados; os demais, em leito natural e sem ponte. Deve ser confirmado em vistoria."],
   campo: ["Ajustado em campo", "Valor alterado manualmente pelo usuário, em substituição ao valor calculado automaticamente."],
 };
 
@@ -57,12 +58,12 @@ const IND = {
     i: "A via depende de um único ponto de conexão com a rede viária. Em caso de interrupção, os deslocamentos ficam sem caminho terrestre alternativo, o que aumenta a dependência logística da área servida.",
     n: "Há entroncamentos em pontos distintos do traçado, o que sugere a existência de caminhos alternativos de acesso." },
   "vul.trafegabilidade_ruim": { origem: "est",
-    o: "Verifica se mais da metade da extensão da via não tem revestimento pavimentado. Nos ramais, usa o campo de revestimento do cadastro da SEINFRA-AM; nas rodovias, a superfície registrada no OpenStreetMap.",
+    o: "Verifica se mais da metade da extensão da via não tem revestimento pavimentado. Nos ramais, adota-se como premissa que os ramais com obra registrada na coluna Situação do cadastro da SEINFRA-AM (concluída ou em andamento) estão pavimentados e que os demais estão em leito natural. Nas rodovias, usa-se a superfície registrada no OpenStreetMap. A vistoria pode alterar o valor.",
     s: "predomínio de trechos sem pavimento",
     i: "O predomínio de leito natural ou revestimento primário torna o tráfego mais sensível às chuvas e pode comprometer a trafegabilidade em parte do ano.",
     n: "As bases consultadas indicam predomínio de trechos pavimentados." },
   "vul.infra_acesso_deficiente": { origem: "est",
-    o: "Verifica se o traçado cruza rio da hidrografia do IBGE (BC250) sem ponte registrada a até 40 m do cruzamento, ou se há ponte de madeira registrada. Cursos d'água classificados como igarapés de menor porte são considerados solucionáveis por bueiro e não pontuam.",
+    o: "Verifica se o traçado cruza rio da hidrografia do IBGE (BC250) sem ponte, ou se há ponte de madeira. Nos ramais sem obra registrada no cadastro da SEINFRA-AM, adota-se como premissa que nenhuma travessia de rio tem ponte; nos ramais com obra e nas rodovias, considera-se ponte registrada no IBGE ou no OpenStreetMap a até 40 m do cruzamento. Igarapés de menor porte são considerados solucionáveis por bueiro e não pontuam. A vistoria pode alterar o valor.",
     s: "travessia de rio sem ponte registrada ou com ponte de madeira",
     i: "Travessias sem ponte registrada ou com ponte de madeira podem interromper ou restringir o tráfego, sobretudo no período de cheia.",
     n: "Não foram identificadas travessias de rio sem ponte registrada nem pontes de madeira." },
@@ -126,7 +127,7 @@ const IND = {
     i: "A intervenção tende a exigir procedimentos específicos junto aos órgãos competentes e às comunidades indígenas afetadas.",
     n: "O traçado não intercepta terra indígena registrada." },
   "dif.oae": { origem: "est",
-    o: "Avalia a necessidade de obras de arte especiais (pontes) nas travessias de rio identificadas na hidrografia do IBGE (BC250).",
+    o: "Avalia a necessidade de obras de arte especiais (pontes) nas travessias de rio identificadas na hidrografia do IBGE (BC250). Nos ramais sem obra registrada, aplica-se a premissa de inexistência de ponte.",
     esc: { 0: "sem travessia de rio", 1: "travessias com ponte registrada", 2: "ponte de madeira registrada, com provável necessidade de intervenção", 3: "travessia sem ponte registrada, com provável necessidade de implantação" } },
 };
 

@@ -228,7 +228,9 @@ async function alternarCamada(k, ligar) {
 const plural = (n, s, p) => `${fmt(n)} ${n === 1 ? s : p}`;
 const NADA = "Não foram identificados registros nas bases consultadas.";
 const parteIndice = (l) => (l === "R" ? RPESO : (1 - RPESO) * W[l]); // fração do índice que o critério pode somar
-const origemDe = (p, c) => (valor(p, c) !== auto(p, c) ? "campo" : IND[c].origem);
+const PREMISSA = { rev: ["vul.trafegabilidade_ruim"], ponte: ["vul.infra_acesso_deficiente", "dif.oae"] };
+const vistoriado = (p, c) => Object.entries(ajustes[p.id]?._vist || {}).some(([k, x]) => x && PREMISSA[k].includes(c));
+const origemDe = (p, c) => (valor(p, c) !== auto(p, c) || vistoriado(p, c) ? "campo" : p.seinfra && Object.values(PREMISSA).flat().includes(c) ? "prem" : IND[c].origem);
 function selo(p, c) {
   const o = origemDe(p, c), [r, t] = ORIGEM[o];
   return `<span class="origem o-${o}" title="${esc(t)}">${r}</span>`;
@@ -297,6 +299,7 @@ function dadosSeinfra(p) {
     ${linha("Código SEINFRA", s.codigo)}${linha("Situação no cadastro", s.situacao)}${linha("Revestimento", s.revestimento)}
     ${linha("Rodovia ou estrada de acesso", s.acesso)}${linha("Ponto de referência", s.referencia)}
     ${linha("Extensão no cadastro", s.extensao_km != null ? `${fmt(s.extensao_km, 2)} km` : null)}
+    ${linha("Obra registrada (coluna Situação)", s.obra != null ? (s.obra ? `Sim${s.contrato ? `, ${s.contrato}` : ""}` : "Não") : null)}
     ${linha("Custo estimado (cadastro)", s.custo_estimado ? s.custo_estimado.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : null)}
   </tbody></table>${s.custo_estimado ? `<p class="nota">${NOTA_CUSTO}</p>` : ""}`;
 }
@@ -469,6 +472,7 @@ function desenharFicha() {
     <p class="sintese">${sintese(v)}</p>
     ${subAbas([["notas", "Critérios e indicadores"], ["porque", "Justificativa"], ["territorio", "Território"]])}
     <div data-subpainel="notas" ${subFicha === "notas" ? "" : "hidden"}>
+      ${blocoVistoria(p)}
       <p class="nota">Cada indicador traz a evidência encontrada, a leitura do resultado e a natureza da informação. Indicadores estimados podem ser corrigidos após vistoria; o índice é recalculado na hora.</p>
       ${blocoCriterio(p, "V", n.V, 5)}
       ${blocoCriterio(p, "D", n.D, 10)}
@@ -484,6 +488,22 @@ function desenharFicha() {
       ${contexto(v)}
       <div class="crit"><h4>População por setor censitário</h4><span>${fmt(p.pop)} pessoas</span></div>${tabelaSetores(p)}
       <div class="crit"><h4>Perfil de altitude do traçado</h4><span></span></div>${perfilSVG(p.ev.perfil) || '<p class="nota">Não há dado de altitude para o traçado.</p>'}</div>`;
+}
+
+// vistoria: registra pavimento e pontes constatados em campo; substitui a premissa do estudo
+const VIST = {
+  rev: { pav: { "vul.trafegabilidade_ruim": 0 }, leito: { "vul.trafegabilidade_ruim": 1 } },
+  ponte: { com: { "vul.infra_acesso_deficiente": 0, "dif.oae": 1 }, madeira: { "vul.infra_acesso_deficiente": 1, "dif.oae": 2 }, sem: { "vul.infra_acesso_deficiente": 1, "dif.oae": 3 } },
+};
+function blocoVistoria(p) {
+  const vs = ajustes[p.id]?._vist || {}, rios = p.ev.travessias - (p.ev.igarapes ?? 0);
+  const prem = p.seinfra ? (p.seinfra.obra ? "ramal com obra, pavimentado" : "ramal sem obra, leito natural") : "superfície do OpenStreetMap";
+  const op = (k, v, r) => `<option value="${v}" ${(vs[k] || "") === v ? "selected" : ""}>${r}</option>`;
+  return `<div class="vistoria"><h4>Vistoria de campo</h4>
+    <p class="nota">Registre o que a vistoria constatou. O registro substitui a premissa do estudo e o índice é recalculado na hora. Os registros ficam salvos neste navegador e podem ser exportados na aba Pesos AHP.</p>
+    <label>Revestimento <select data-vistoria="rev">${op("rev", "", `Não vistoriado (premissa: ${prem})`)}${op("rev", "pav", "Vistoria atesta pavimento na maior parte da extensão")}${op("rev", "leito", "Vistoria atesta leito natural ou revestimento primário")}</select></label>
+    ${rios > 0 ? `<label>Pontes (${plural(rios, "travessia de rio", "travessias de rio")}) <select data-vistoria="ponte">${op("ponte", "", `Não vistoriado (premissa: ${p.seinfra && !p.seinfra.obra ? "sem ponte" : "pontes registradas nas bases"})`)}${op("ponte", "com", "Vistoria atesta ponte adequada em todas as travessias")}${op("ponte", "madeira", "Vistoria atesta ponte de madeira")}${op("ponte", "sem", "Vistoria atesta travessia sem ponte")}</select></label>`
+      : '<p class="nota">Não foram identificadas travessias de rio no traçado; o registro de pontes não se aplica.</p>'}</div>`;
 }
 
 function subAbas(lista) {
@@ -757,6 +777,15 @@ document.querySelectorAll("[name=fundo]").forEach((r) => r.addEventListener("cha
 document.querySelectorAll("[data-camada]").forEach((c) => c.addEventListener("change", () => alternarCamada(c.dataset.camada, c.checked)));
 $("#fechar-ficha").addEventListener("click", () => { selecionada = null; $("#ficha").hidden = true; estilizarMapa(); desenharLista(); mapa.invalidateSize(); history.replaceState(null, "", location.pathname); });
 $("#ficha").addEventListener("change", (e) => {
+  const k = e.target.dataset.vistoria;
+  if (k && selecionada) {
+    const id = selecionada.p.id, a = (ajustes[id] = ajustes[id] || {}), vs = (a._vist = a._vist || {});
+    Object.values(VIST[k]).forEach((m) => Object.keys(m).forEach((c) => delete a[c]));
+    if (e.target.value) { vs[k] = e.target.value; Object.assign(a, VIST[k][e.target.value]); } else delete vs[k];
+    if (!Object.keys(vs).length) delete a._vist;
+    if (!Object.keys(a).length) delete ajustes[id];
+    guardar("ajustes", ajustes); recalcular(); desenharFicha(); return;
+  }
   const c = e.target.dataset.chave; if (!c || !selecionada) return;
   const p = selecionada.p, val = Number(e.target.value);
   ajustes[p.id] = ajustes[p.id] || {};

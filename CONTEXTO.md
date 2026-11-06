@@ -114,6 +114,7 @@ Ao mudar `app.js`, `modulos.js` ou `style.css`, aumente o `?v=` correspondente n
 - O REGIC tem peso pequeno de propósito: a prioridade segue a necessidade local, como recomendam o artigo e os bancos multilaterais.
 - Escolas vêm do CNEFE 2022 porque o catálogo do INEP bloqueia acesso automatizado. Não contornar o bloqueio.
 - Dados brutos (`data/`) não vão para o repositório.
+- Premissa de pavimento e pontes (06/11/2026): ramal com obra na coluna Situação do REV06 (CONCLUÍDO ou EM OBRA, 63 ramais) é considerado pavimentado; os demais (OBRA EXTINTA incluída) ficam em leito natural e sem ponte em nenhuma travessia de rio. A ficha tem o bloco Vistoria de campo para registrar pavimento e pontes constatados; o registro substitui a premissa.
 - Redação: português formal, técnico e acessível. Cada resultado explica o que foi avaliado, o que foi encontrado e como pesou no índice. Ausência de registro em base pública não é tratada como inexistência comprovada.
 - O relatório da via segue 10 seções: identificação; síntese; contexto territorial; transporte (V); desenvolvimento (D); projeto e execução (F); posição no ranking (com REGIC); sensibilidade e validação; memória metodológica; fontes e limitações.
 
